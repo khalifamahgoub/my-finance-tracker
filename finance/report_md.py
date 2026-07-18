@@ -21,6 +21,11 @@ def render_markdown(ctx: dict) -> str:
              f"Savings rate {s['savings_rate']}%**")
     L.append(f"**Investable surplus (suggested transfer): {_m(ctx['surplus']['suggested_transfer'])}** "
              f"(net minus {_m(ctx['surplus']['school_set_aside'])} school set-aside)")
+    p = ctx.get("pacing")
+    if p:
+        tail = ("final" if p["closed"] else f"on track for ~{_m(p['projected_spend'])}")
+        L.append(f"**Pace** — day {p['day']}/{p['days']}: spent {_m(p['spend_to_date'])} so far, "
+                 f"{tail} vs plan {_m(p['plan_expense'])}.")
     L.append("")
 
     # Biggest over-plan (the findings)
@@ -46,6 +51,25 @@ def render_markdown(ctx: dict) -> str:
         plan = f", plan {_m(f['planned'])}" if f["planned"] else ""
         L.append(f"- **{f['category']}** {_m(f['actual'])}{vs} — {avg}{plan}")
     L.append("")
+
+    subs = [s for s in ctx.get("sub_changes", []) if s["status"] in ("increased", "new", "gone")]
+    if subs:
+        L.append("## Subscription changes")
+        for s in subs[:8]:
+            d = f" ({s['delta_pct']:+.0f}%)" if s["delta_pct"] else ""
+            L.append(f"- {s['status'].upper()}: {s['merchant'][:30]} {_m(s['amount'])}{d}")
+        L.append("")
+
+    fcast = ctx.get("forecast") or {}
+    if fcast.get("rows"):
+        low = fcast.get("low")
+        L.append("## Cash-flow forecast")
+        L.append(f"From {fcast['anchor_label']} balance {_m(fcast['anchor_balance'])}, following the plan:")
+        for r in fcast["rows"]:
+            mark = "  <- low point" if low and r["period_id"] == low["period_id"] else ""
+            tag = " (term fee)" if r["school_due"] else ""
+            L.append(f"- {r['label']}{tag}: net {_m(r['planned_net'])} -> balance {_m(r['projected_balance'])}{mark}")
+        L.append("")
 
     sch, em = ctx["school"], ctx["emergency"]
     L.append("## Sinking & savings")

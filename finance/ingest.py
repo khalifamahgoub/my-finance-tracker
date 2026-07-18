@@ -8,6 +8,7 @@ rows land with category=NULL and are enriched afterward.
 from __future__ import annotations
 
 import hashlib
+import os
 import shutil
 from datetime import date
 from pathlib import Path
@@ -143,6 +144,17 @@ def run(cfg: Config, sync: bool = False, archive: bool = True) -> int:
             notion_sync.sync(cfg, dry_run=False)
         except Exception as e:
             print(f"Notion sync failed (local data is safe): {e}")
+
+    # Auto AI narrative when a key is configured (best-effort; never fails the run).
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        from . import narrate as narr
+        print()
+        try:
+            narr.narrate(cfg, period=None)
+        except Exception as e:
+            print(f"narrate skipped: {e}")
+    else:
+        print("\n(set ANTHROPIC_API_KEY to auto-generate an AI narrative each run)")
     return 0
 
 

@@ -64,6 +64,11 @@ def cmd_sync_notion(args: argparse.Namespace) -> int:
     return notion_sync.sync(Config.load(), dry_run=args.dry_run)
 
 
+def cmd_narrate(args: argparse.Namespace) -> int:
+    from . import narrate
+    return narrate.narrate(Config.load(), period=args.period, dry_run=args.dry_run)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="finance", description="Personal finance tracker (Bahrain, tri-account).")
@@ -88,6 +93,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_sync = sub.add_parser("sync-notion", help="push a projection to the Notion hub")
     p_sync.add_argument("--dry-run", action="store_true", help="print what would sync; touch nothing")
     p_sync.set_defaults(func=cmd_sync_notion)
+
+    p_narr = sub.add_parser("narrate", help="AI 3-line summary of a period (Claude API)")
+    p_narr.add_argument("period", nargs="?", default=None, help="period, e.g. 'Feb 2026' (default: current)")
+    p_narr.add_argument("--dry-run", action="store_true", help="print the prompt; call nothing")
+    p_narr.set_defaults(func=cmd_narrate)
     return parser
 
 

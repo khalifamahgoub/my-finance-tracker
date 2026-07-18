@@ -135,3 +135,52 @@ def subscriptions_list(conn: sqlite3.Connection, period_id: str) -> list[dict]:
            FROM transactions WHERE period_id=? AND category='Subscriptions' AND is_internal=0
            GROUP BY norm_desc ORDER BY amt DESC""", (period_id,)).fetchall()
     return [{"merchant": r["norm_desc"], "amount": r["amt"], "n": r["n"]} for r in rows]
+
+
+def _sub_key(norm_desc: str) -> str:
+    """Canonical merchant key: first two non-numeric tokens, so a merchant whose billing
+    city changes month to month (e.g. 'NETFLIX COM AMSTERDAM' vs '... LOS GATOS') still
+    matches across periods instead of looking like a cancel + re-subscribe."""
+    toks = [t for t in norm_desc.split() if not t.isdigit()]
+    return " ".join(toks[:2]) if toks else norm_desc
+
+
+def _sub_amounts(conn: sqlite3.Connection, period_id: str) -> dict[str, float]:
+    """Subscription charges by canonical merchant, excluding the FX markup/VAT fee lines."""
+    rows = conn.execute(
+        """SELECT norm_desc, -ROUND(SUM(amount),3) AS amt
+           FROM transactions WHERE period_id=? AND category='Subscriptions' AND is_internal=0
+             AND norm_desc NOT LIKE 'FOREIGN EXCHANGE%' AND norm_desc NOT LIKE 'VAT %'
+           GROUP BY norm_desc""", (period_id,)).fetchall()
+    out: dict[str, float] = {}
+    for r in rows:
+        k = _sub_key(r["norm_desc"])
+        out[k] = round(out.get(k, 0.0) + r["amt"], 3)
+    return out
+
+
+def subscription_changes(conn: sqlite3.Connection, period_id: str) -> list[dict]:
+    """Compare each subscription to the prior period: new / increased / decreased / gone.
+    Price creep (silent hikes) and vanished-but-maybe-still-billed subs both surface."""
+    prior = conn.execute(
+        "SELECT MAX(period_id) FROM transactions WHERE period_id < ?", (period_id,)).fetchone()[0]
+    cur = _sub_amounts(conn, period_id)
+    prv = _sub_amounts(conn, prior) if prior else {}
+    out: list[dict] = []
+    for m, amt in cur.items():
+        p = prv.get(m)
+        if p is None:
+            status, delta = "new", None
+        elif amt > p * 1.02:
+            status, delta = "increased", round(100 * (amt - p) / p, 1)
+        elif amt < p * 0.98:
+            status, delta = "decreased", round(100 * (amt - p) / p, 1)
+        else:
+            status, delta = "steady", 0.0
+        out.append({"merchant": m, "amount": amt, "prev": p, "status": status, "delta_pct": delta})
+    for m, p in prv.items():
+        if m not in cur:
+            out.append({"merchant": m, "amount": 0.0, "prev": p, "status": "gone", "delta_pct": None})
+    order = {"increased": 0, "new": 1, "gone": 2, "decreased": 3, "steady": 4}
+    out.sort(key=lambda r: (order[r["status"]], -(r["amount"] or 0)))
+    return out

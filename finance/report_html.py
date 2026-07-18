@@ -14,6 +14,7 @@ from .config import Config
 from . import db as dbm
 from . import variance as var
 from . import sinking as sink
+from . import forecast as fc
 from .periods import period_id_of, period_label, period_bounds, parse_period
 
 _TEMPLATES = Path(__file__).resolve().parent / "templates"
@@ -76,6 +77,9 @@ def build_context(conn: sqlite3.Connection, cfg: Config, period_id: str,
         "breakdown": var.category_breakdown(conn, period_id),
         "flags": var.standing_flags(conn, period_id, cfg),
         "subscriptions": var.subscriptions_list(conn, period_id),
+        "sub_changes": var.subscription_changes(conn, period_id),
+        "pacing": fc.pacing(conn, cfg, period_id),
+        "forecast": fc.forecast(conn, cfg),
         "school": school,
         "emergency": emergency,
         "surplus": surplus,

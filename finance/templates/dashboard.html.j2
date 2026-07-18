@@ -74,6 +74,15 @@
       <div class="tiny muted">net − {{ surplus.school_set_aside|bhd }} school set-aside</div></div>
   </div>
 
+  {% if pacing %}
+  <div class="card2" style="margin-top:12px;padding:12px 18px">
+    <b>Pace</b> — day {{ pacing.day }}/{{ pacing.days }}: spent {{ pacing.spend_to_date|bhd }} so far,
+    {% if pacing.closed %}final{% else %}on track for ~<b>{{ pacing.projected_spend|bhd }}</b>{% endif %}
+    vs plan {{ pacing.plan_expense|bhd }}{% if pacing.last_spend is not none %} · last period {{ pacing.last_spend|bhd }}{% endif %}
+    {% if pacing.on_track is not none %}<span class="pill {{ '' if pacing.on_track else 'hot' }}">{{ 'on track' if pacing.on_track else 'over pace' }}</span>{% endif %}
+  </div>
+  {% endif %}
+
   <!-- 2. PLAN vs ACTUAL -->
   <h2>Plan vs Actual</h2>
   <table>
@@ -128,10 +137,13 @@
       {% endfor %}
     </div>
     <div class="card2">
-      <div class="tiny muted" style="padding:10px 0 4px">SUBSCRIPTIONS ({{ subscriptions|length }})</div>
-      {% for s in subscriptions if not s.merchant.startswith('FOREIGN EXCHANGE') and not s.merchant.startswith('VAT') %}
+      <div class="tiny muted" style="padding:10px 0 4px">SUBSCRIPTIONS ({{ sub_changes|length }}) — ↑ hikes flagged</div>
+      {% for s in sub_changes %}
       <div class="flag" style="padding:6px 0">
-        <span class="tiny">{{ s.merchant[:30] }}</span>
+        <span class="tiny">{{ s.merchant[:24] }}
+          {% if s.status=='increased' %}<span class="pill hot">↑{{ s.delta_pct }}%</span>
+          {% elif s.status=='new' %}<span class="pill">new</span>
+          {% elif s.status=='gone' %}<span class="pill">gone</span>{% endif %}</span>
         <span class="num tiny">{{ s.amount|bhd }}</span></div>
       {% endfor %}
     </div>
@@ -158,6 +170,24 @@
         ila {{ emergency.balances.get('ila_account')|bhd }}{% endif %}</div>
     </div>
   </div>
+
+  <!-- CASH-FLOW FORECAST -->
+  {% if forecast.rows %}
+  <h2>Cash-flow forecast</h2>
+  <div class="sub">Projected forward from {{ forecast.anchor_label }} balance
+    {{ forecast.anchor_balance|bhd }}, if you follow the plan.
+    {% if forecast.low %}Low point: <b>{{ forecast.low.label }}</b> at {{ forecast.low.projected_balance|bhd }}.{% endif %}</div>
+  <table>
+    <tr><th>Period</th><th class="num">Planned net</th><th class="num">Projected balance</th><th></th></tr>
+    {% for r in forecast.rows %}
+    <tr class="{% if forecast.low and r.period_id==forecast.low.period_id %}red{% endif %}">
+      <td>{{ r.label }}{% if r.school_due %} 🎓{% endif %}</td>
+      <td class="num {{ 'pos' if r.planned_net>=0 else 'neg' }}">{{ r.planned_net|bhd }}</td>
+      <td class="num">{{ r.projected_balance|bhd }}</td>
+      <td class="rag">{% if forecast.low and r.period_id==forecast.low.period_id %}⬇ low{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
 
   <!-- 6. UNCATEGORISED REVIEW -->
   <h2>Needs review — {{ uncat_count }} uncategorised ({{ uncat_pct }}%)</h2>
