@@ -1,5 +1,7 @@
 # Personal Finance Tracker
 
+[![tests](https://github.com/khalifamahgoub/my-finance-tracker/actions/workflows/tests.yml/badge.svg)](https://github.com/khalifamahgoub/my-finance-tracker/actions/workflows/tests.yml)
+
 A local, one-command pipeline that turns monthly bank/credit-card PDF statements into a
 dashboard and a plan-vs-actual variance report. Boring, maintainable Python; SQLite is
 the source of truth; no cloud required.
