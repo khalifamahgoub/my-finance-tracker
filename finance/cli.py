@@ -40,7 +40,8 @@ def cmd_run(args: argparse.Namespace) -> int:
     except ImportError:
         print("ingest pipeline not available yet (Phase 1).")
         return 0
-    return ingest.run(cfg, sync=getattr(args, "sync", False))
+    return ingest.run(cfg, sync=getattr(args, "sync", False),
+                      narrate=getattr(args, "narrate", False))
 
 
 def cmd_review(args: argparse.Namespace) -> int:
@@ -80,6 +81,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_run = sub.add_parser("run", help="process inbox + regenerate dashboard")
     p_run.add_argument("--sync", action="store_true",
                        help="after generating the dashboard, push the projection to Notion")
+    p_run.add_argument("--narrate", action="store_true",
+                       help="also generate the AI narrative (needs ANTHROPIC_API_KEY)")
     p_run.set_defaults(func=cmd_run)
 
     p_review = sub.add_parser("review", help="resolve uncategorised transactions")

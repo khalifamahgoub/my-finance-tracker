@@ -8,7 +8,6 @@ rows land with category=NULL and are enriched afterward.
 from __future__ import annotations
 
 import hashlib
-import os
 import shutil
 from datetime import date
 from pathlib import Path
@@ -61,7 +60,7 @@ def _archive(cfg: Config, path: Path, month: str | None) -> str:
     return str(dest)
 
 
-def run(cfg: Config, sync: bool = False, archive: bool = True) -> int:
+def run(cfg: Config, sync: bool = False, narrate: bool = False, archive: bool = True) -> int:
     from . import categorise
 
     conn = dbm.connect(cfg.db_path)
@@ -145,16 +144,15 @@ def run(cfg: Config, sync: bool = False, archive: bool = True) -> int:
         except Exception as e:
             print(f"Notion sync failed (local data is safe): {e}")
 
-    # Auto AI narrative when a key is configured (best-effort; never fails the run).
-    if os.environ.get("ANTHROPIC_API_KEY"):
+    if narrate:
+        # Opt-in AI narrative (best-effort; never fails the run). narrate() prints its
+        # own guidance if ANTHROPIC_API_KEY is unset.
         from . import narrate as narr
         print()
         try:
             narr.narrate(cfg, period=None)
         except Exception as e:
             print(f"narrate skipped: {e}")
-    else:
-        print("\n(set ANTHROPIC_API_KEY to auto-generate an AI narrative each run)")
     return 0
 
 

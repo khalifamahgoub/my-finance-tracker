@@ -31,6 +31,7 @@ writes `output/dashboard.html` + a Markdown summary.
 |---|---|
 | `finance run` | Process `inbox/`, regenerate the dashboard + Markdown |
 | `finance run --sync` | …and push a projection to Notion (needs `NOTION_TOKEN`) |
+| `finance run --narrate` | …and print an AI narrative (needs `ANTHROPIC_API_KEY`) |
 | `finance review` | Interactively name unknown IBANs/merchants (learns permanently) |
 | `finance period "Feb 2026"` | Regenerate any past month |
 | `finance sync-notion [--dry-run]` | Push/preview the one-way Notion projection |
