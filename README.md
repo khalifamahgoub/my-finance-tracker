@@ -1,7 +1,5 @@
 # Personal Finance Tracker
 
-[![tests](https://github.com/khalifamahgoub/my-finance-tracker/actions/workflows/tests.yml/badge.svg)](https://github.com/khalifamahgoub/my-finance-tracker/actions/workflows/tests.yml)
-
 A local, one-command pipeline that turns monthly bank/credit-card PDF statements into a
 dashboard and a plan-vs-actual variance report. Boring, maintainable Python; SQLite is
 the source of truth; no cloud required.
@@ -9,6 +7,17 @@ the source of truth; no cloud required.
 > The detailed spec lives in `PRD.md`, which is **gitignored** because it contains
 > personal financial detail. The `config/*.yaml` you actually run with are gitignored
 > too — only sanitized `config/*.example.yaml` templates are committed.
+
+## Build status
+
+[![tests](https://github.com/khalifamahgoub/my-finance-tracker/actions/workflows/tests.yml/badge.svg)](https://github.com/khalifamahgoub/my-finance-tracker/actions/workflows/tests.yml)
+
+Every push and pull request runs the full `pytest` suite on Python 3.13 via GitHub
+Actions ([`.github/workflows/tests.yml`](.github/workflows/tests.yml)) — 48 unit tests
+covering the financial-month math, dedup/normalisation, internal-transfer netting, RAG
+variance, cash-flow forecasting, month-to-date pacing, and subscription-change detection.
+The two ila-account reconciliation tests run locally against the real statements and skip
+on CI (where `Docs/` is gitignored), so the build stays green without exposing any data.
 
 ## Quick start (zero install)
 
