@@ -1,0 +1,31 @@
+[project]
+name = "finance-tracker"
+version = "0.1.0"
+description = "Local personal finance tracker for Bahrain dual/tri-account statements"
+requires-python = ">=3.11"
+dependencies = [
+    "pymupdf>=1.24",   # native-text PDF extraction (fitz)
+    "pandas>=2.0",     # Excel plan ingestion
+    "openpyxl>=3.1",   # .xlsx reading
+    "PyYAML>=6.0",     # hand-editable config
+    "Jinja2>=3.1",     # HTML dashboard templating
+]
+
+[project.optional-dependencies]
+ocr = ["pytesseract>=0.3"]   # dormant fallback; also needs the native tesseract binary
+notion = ["requests>=2.31", "truststore>=0.9"]   # Phase 4 sync (corporate-proxy safe)
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+finance = "finance.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["finance", "finance.parsers"]

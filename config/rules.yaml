@@ -1,0 +1,158 @@
+# Keyword categorisation rules (hand-editable). Matched against the NORMALISED,
+# uppercased description. First category with any matching keyword wins, so order =
+# precedence (most specific first). Review-confirmed keywords get appended under the
+# relevant list with an "# added <date> via review" marker.
+keywords:
+  Subscriptions:
+    - NETFLIX
+    - GOOGLE ONE
+    - CLAUDE.AI
+    - ANTHROPIC
+    - PADDLE
+    - APPLE.COM
+    - APPLE COM
+    - MBC
+    - MICROSOFT
+    - MSBILL
+    - GAMMA.APP
+    - GAMMA APP
+    - WHOOP
+    - SPOTIFY
+    - OPENAI
+    - YOUTUBE
+    - LINKEDIN
+    - RESEMBLE
+    - CURSOR
+    - ADOBE
+    - CHATGPT
+
+  Food Delivery:
+    - TALABAT
+    - JAHEZ
+    - KEETA
+    - DELIVEROO
+
+  Telecom:
+    - STC BAHRAIN
+    - STC
+    - BATELCO
+    - ZAIN
+
+  Transport:
+    - BENZINA
+    - BAPCO
+    - PETROL
+    - ENOC
+    - TAZWEED
+    - CAREEM RIDE
+    - UBER TRIP
+    - UBER
+    - CAREEM
+    - PARKING
+    - SALIK
+    - SAAR SERVICES
+    - CAR WASH
+    - MOTOGLOW
+    - DEVES GATE
+
+  Groceries:
+    - NAYA
+    - LULU
+    - ALOSRA
+    - TROLLEY MARKET
+    - FOOD WORLD
+    - MACROMART
+    - HYPERMARK
+    - SUPERMARKET
+    - CARREFOUR
+    - MEGAMART
+    - EMILS MINI MAR
+    - YES CONVENIENC
+    - TAMIMI
+    - ALJAZIRA
+    - HAVANA MARKET
+    - MART
+    - MARKETS
+    - GROCER
+
+  Health:
+    - HOSPITA
+    - MEDICAL
+    - HICARE
+    - HOLISTIC HEALTH
+    - PHARMACY
+    - AMERICAN MISSION
+    - CLINIC
+    - UNITED INSURANCE
+
+  Shopping:
+    - IKEA
+    - SHARAF DG
+    - HOME STORY
+    - TABLE TOP
+    - THE LOFT
+    - TAHER CLOTHING
+    - NORDIVA
+    - BIC-RETAIL
+    - MARQT
+    - KASBATI
+
+  Education:
+    - SCHOOL
+    - ST CHRISTOPHERS
+    - NURSERY
+    - KINDERGARTEN
+    - TUITION
+
+  Government & Fees:
+    - MOI GENERAL
+    - GENERAL DIRECTOR
+    - MINISTRY
+    - TRAFFIC
+    - SIJILAT
+
+  Bank Charges:
+    - FINANCE CHARGE
+    - BILLED FINANCE
+    - SERVICE CHARGE
+    - ANNUAL FEE
+
+  Car Loan:
+    - SETTLEMENT APPROVE
+    - DEAL NO
+
+  Salary:
+    - INWARD SALARY
+    - IR SALARY
+
+  Other Income:
+    - PROFIT FROM A/C
+
+  Cashback:
+    - CASHBACK
+
+  Dining:
+    - BU ALI SPICE
+    - BLACK DROP
+    - TIM HORTONS
+    - CARIBOU
+    - BASKIN ROBBINS
+    - DUNKIN
+    - KFC
+    - STACK EATERY
+    - CHOCOMELT
+    - FINJAN
+    - ISTANBUL HOUSE
+    - ZAGHLOUL
+    - GOODNESS CAFE
+    - ARABICA
+    - PAUL
+    - 668 CAFE
+    - CAFE
+    - COFFEE
+    - RESTAURANT
+    - RESTAUR
+    - EATERY
+    - SHAWARMA
+    - BAKERY
+    - JUICE

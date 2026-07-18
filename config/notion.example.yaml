@@ -1,0 +1,18 @@
+# Notion sync config — SANITIZED TEMPLATE (committed).
+#
+# Your REAL config/notion.yaml (gitignored) holds your actual hub + page ids and the
+# created child-DB ids. Copy this to config/notion.yaml and fill in the ids from your
+# "💰 Financial & Personal" hub (open each section page and copy the id from its URL).
+#
+# hub_page_id  = the hub database's page id
+# section_pages = the four hub-row PAGE ids (child DBs are parented under these)
+# databases     = auto-filled by `finance sync-notion` as it creates child DBs
+hub_page_id: "<hub page id>"
+sync_window_months: 3
+section_pages:
+  transactions: "<'3 — Statements' page id>"
+  statements: "<'3 — Statements' page id>"
+  monthly_summary: "<'2 — This month' page id>"
+  review_queue: "<'2 — This month' page id>"
+  reference: "<'4 — Reference vault' page id>"
+databases: {}

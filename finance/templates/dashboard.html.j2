@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finance — {{ period_label }}</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --ink:#e8eaed; --muted:#9aa0aa;
+    --line:#2a2f3a; --accent:#6ea8fe; --green:#3fb950; --amber:#d29922; --red:#f85149;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:light){
+    :root{--bg:#f6f7f9;--card:#fff;--card2:#f0f2f5;--ink:#1a1d24;--muted:#5b6270;
+          --line:#e3e6eb;--accent:#2563eb;--green:#1a7f37;--amber:#9a6700;--red:#cf222e;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px;}
+  h1{font-size:26px;margin:0 0 2px;letter-spacing:-.02em;}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+     margin:34px 0 12px;font-weight:600;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:6px;}
+  .banner{background:color-mix(in srgb,var(--amber) 18%,transparent);
+          border:1px solid var(--amber);color:var(--ink);padding:10px 14px;border-radius:10px;
+          margin:14px 0;font-size:14px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;}
+  .card .v{font:600 26px/1.1 var(--mono);margin-top:8px;letter-spacing:-.01em;}
+  .card .v.small{font-size:20px}
+  .card.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,var(--card)),var(--card));
+             border-color:var(--accent);}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;}
+  td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap;}
+  tr.green td.rag{color:var(--green)} tr.amber td.rag{color:var(--amber)} tr.red td.rag{color:var(--red)}
+  .card2{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:4px 18px;}
+  .bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:5px;}
+  .bar > i{display:block;height:100%;background:var(--accent);}
+  .bar.green>i{background:var(--green)} .bar.amber>i{background:var(--amber)} .bar.red>i{background:var(--red)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .flag{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);}
+  .flag .lab{font-weight:600}
+  .pill{font:600 11px var(--mono);padding:2px 8px;border-radius:20px;background:var(--card2);color:var(--muted);}
+  .pill.hot{background:color-mix(in srgb,var(--red) 20%,transparent);color:var(--red);}
+  .muted{color:var(--muted)} .tiny{font-size:12px}
+  .foot{margin-top:40px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;}
+  code{font-family:var(--mono);background:var(--card2);padding:1px 6px;border-radius:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>{{ period_label }}</h1>
+  <div class="sub">{{ date_range }} &middot; financial month (23rd–22nd) &middot; {{ txn_count }} transactions</div>
+  {% if banner %}<div class="banner">{{ banner }}</div>{% endif %}
+
+  <!-- 1. HEADLINE -->
+  <div class="cards" style="margin-top:16px">
+    <div class="card"><div class="k">Income</div><div class="v pos">{{ summary.income|bhd }}</div></div>
+    <div class="card"><div class="k">Spend</div><div class="v">{{ summary.spend|bhd }}</div></div>
+    <div class="card"><div class="k">Net</div>
+      <div class="v {{ 'pos' if summary.net>=0 else 'neg' }}">{{ summary.net|bhd }}</div></div>
+    <div class="card"><div class="k">Savings rate</div>
+      <div class="v {{ 'pos' if (summary.savings_rate or 0)>=0 else 'neg' }}">
+        {{ summary.savings_rate if summary.savings_rate is not none else '—' }}%</div></div>
+    <div class="card hero"><div class="k">Investable surplus →</div>
+      <div class="v small">{{ surplus.suggested_transfer|bhd }}</div>
+      <div class="tiny muted">net − {{ surplus.school_set_aside|bhd }} school set-aside</div></div>
+  </div>
+
+  <!-- 2. PLAN vs ACTUAL -->
+  <h2>Plan vs Actual</h2>
+  <table>
+    <tr><th>Category</th><th class="num">Plan</th><th class="num">Actual</th>
+        <th class="num">Variance</th><th>Status</th></tr>
+    {% for r in income_rows %}
+    <tr class="{{ r.rag|ragclass }}">
+      <td>{{ r.category }} <span class="tiny muted">(income)</span></td>
+      <td class="num">{{ r.planned|bhd }}</td><td class="num">{{ r.actual|bhd }}</td>
+      <td class="num {{ 'pos' if r.variance>=0 else 'neg' }}">{{ r.variance|bhd }}</td>
+      <td class="rag">{{ r.rag }}</td></tr>
+    {% endfor %}
+    {% for r in expense_rows %}
+    <tr class="{{ r.rag|ragclass }}">
+      <td>{{ r.category }}{% if r.section=='UNPLANNED' %} <span class="tiny muted">(unplanned)</span>{% endif %}</td>
+      <td class="num">{{ r.planned|bhd }}</td><td class="num">{{ r.actual|bhd }}</td>
+      <td class="num {{ 'neg' if r.variance>0 else 'pos' }}">{{ r.variance|bhd }}</td>
+      <td class="rag">{{ r.rag }}</td></tr>
+    {% endfor %}
+  </table>
+
+  <!-- 3. CATEGORY BREAKDOWN -->
+  <h2>Category breakdown</h2>
+  <div class="card2">
+    {% for b in breakdown %}
+    <div style="padding:9px 0;border-bottom:1px solid var(--line)">
+      <div style="display:flex;justify-content:space-between">
+        <span>{{ b.category or 'Uncategorised' }} <span class="tiny muted">({{ b.n }})</span></span>
+        <span class="num">{{ b.spend|bhd }} &nbsp;<span class="muted tiny">{{ b.pct }}%</span></span>
+      </div>
+      <div class="bar"><i style="width:{{ b.pct }}%"></i></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- 4. STANDING FLAGS -->
+  <h2>Standing flags</h2>
+  <div class="grid2">
+    <div class="card2">
+      {% for f in flags %}
+      <div class="flag">
+        <span class="lab">{{ f.category }}</span>
+        <span class="num">{{ f.actual|bhd }}
+          {% if f.vs_avg_pct is not none %}
+            <span class="pill {{ 'hot' if f.vs_avg_pct>25 else '' }}">
+              {{ '+' if f.vs_avg_pct>=0 else '' }}{{ f.vs_avg_pct }}% vs 3-mo</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="tiny muted" style="padding:0 0 6px">
+        3-mo avg {{ f.avg_3mo|bhd }}{% if f.planned %} &middot; plan {{ f.planned|bhd }}{% endif %}</div>
+      {% endfor %}
+    </div>
+    <div class="card2">
+      <div class="tiny muted" style="padding:10px 0 4px">SUBSCRIPTIONS ({{ subscriptions|length }})</div>
+      {% for s in subscriptions if not s.merchant.startswith('FOREIGN EXCHANGE') and not s.merchant.startswith('VAT') %}
+      <div class="flag" style="padding:6px 0">
+        <span class="tiny">{{ s.merchant[:30] }}</span>
+        <span class="num tiny">{{ s.amount|bhd }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 5. SINKING FUNDS -->
+  <h2>Sinking &amp; savings</h2>
+  <div class="grid2">
+    <div class="card">
+      <div class="k">{{ school.label }} — next due {{ school.next_due or '—' }}</div>
+      <div class="v small">{{ school.target|bhd }}</div>
+      <div class="tiny muted">
+        set aside <b>{{ school.suggested_monthly|bhd }}</b>/mo for {{ school.months_to_due }} month(s)
+        &middot; paid this year {{ school.paid_this_year|bhd }}</div>
+    </div>
+    <div class="card">
+      <div class="k">{{ emergency.label }} — target {{ emergency.target|bhd }}</div>
+      <div class="v small {{ 'pos' if emergency.pct and emergency.pct>=100 else '' }}">{{ emergency.current|bhd }}</div>
+      <div class="bar {{ 'green' if emergency.pct and emergency.pct>=100 else 'amber' }}">
+        <i style="width:{{ [emergency.pct or 0,100]|min }}%"></i></div>
+      <div class="tiny muted" style="margin-top:6px">
+        {{ emergency.pct }}% of target &middot; shortfall {{ emergency.shortfall|bhd }}
+        {% if emergency.balances %}<br>Khaleeji {{ emergency.balances.get('khaleeji')|bhd }},
+        ila {{ emergency.balances.get('ila_account')|bhd }}{% endif %}</div>
+    </div>
+  </div>
+
+  <!-- 6. UNCATEGORISED REVIEW -->
+  <h2>Needs review — {{ uncat_count }} uncategorised ({{ uncat_pct }}%)</h2>
+  <div class="sub">Resolve with <code>finance review</code>; naming an IBAN once teaches it for every month.</div>
+  <table>
+    <tr><th>Counterparty / merchant</th><th class="num">#</th><th class="num">Amount</th></tr>
+    {% for u in uncategorised %}
+    <tr><td>{{ u.who }} {% if u.is_iban %}<span class="tiny muted">IBAN</span>{% endif %}</td>
+        <td class="num">{{ u.n }}</td><td class="num">{{ u.amt|bhd }}</td></tr>
+    {% endfor %}
+  </table>
+
+  <div class="foot">Generated {{ generated_at }} · <code>finance run</code> · SQLite is the source of truth.
+    BHD, financial month 23rd–22nd. 🟢 within plan · 🟡 ≤15% over · 🔴 &gt;15% over.</div>
+</div>
+</body>
+</html>

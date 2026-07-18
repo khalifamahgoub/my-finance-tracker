@@ -1,0 +1,28 @@
+# IBAN directory — SANITIZED TEMPLATE (committed).
+#
+# Your REAL directory lives in config/iban_map.yaml, which is gitignored so your
+# actual IBANs and payee names never enter version control. Copy this file to
+# config/iban_map.yaml and fill in real values, or let `finance review` build it up.
+#
+# category: null => unnamed/unknown counterparty -> lands in review
+# is_internal: 1  => your own account, netted out of spend/income
+# flag: REVIEW    => force manual review on every occurrence
+ibans:
+  BH00EXAM00000000000000001:
+    payee: "Landlord (example)"
+    category: "Housing"
+    is_internal: 0
+    typical_min: 800
+    typical_max: 800
+    source: "example"
+  BH00EXAM00000000000000002:
+    payee: "My other account (example)"
+    category: "Internal Transfer"
+    is_internal: 1
+    source: "example"
+  BH00EXAM00000000000000003:
+    payee: "UNKNOWN - flag every occurrence (example)"
+    category: "Uncategorised"
+    is_internal: 0
+    flag: "REVIEW"
+    source: "example"

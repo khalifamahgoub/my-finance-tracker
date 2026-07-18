@@ -1,0 +1,59 @@
+# Account + behavioural config — SANITIZED TEMPLATE (committed).
+#
+# Your REAL config lives in config/accounts.yaml (gitignored) so your own IBANs and
+# family names never enter version control. Copy this to config/accounts.yaml and fill
+# in the real values (marked <FILL IN>). The behavioural settings below are sane defaults.
+
+# Own accounts — any transfer whose counterparty IBAN is here is INTERNAL (netted out).
+own_account_ibans:
+  - BH00EXAM00000000000000010   # <FILL IN> your ila/current account(s) + salary account
+  - BH00EXAM00000000000000011
+
+# Description keywords that mark an account row as an internal transfer (netted).
+internal_desc_keywords:
+  - CREDIT CARD PAYMENT
+  - CARD PAYMENT
+  - HASSALA
+  - TO MY ILA
+
+# Credit-card cardholders: card last-4 -> tag (from the statement section headers).
+cardholders:
+  "0000": primary          # <FILL IN> your card last-4
+  "0001": supplementary
+cardholder_names:
+  primary: "Primary"       # <FILL IN>
+  supplementary: "Supplementary"
+
+# School sinking fund
+school_iban: BH00EXAM00000000000000020   # <FILL IN>
+school_term_fee_min: 3800     # transfer >= this to the school IBAN = term fee (sinking)
+
+# Remittance hub shared between two recipients; split by amount band.
+remittance_hub_iban: BH00EXAM00000000000000021   # <FILL IN>
+remittance_split:
+  default_amount: 350
+  band_amount: 180
+
+# OCR fallback (dormant). Native-text parsing covers current statements.
+ocr:
+  tesseract_cmd: null           # e.g. "C:/Program Files/Tesseract-OCR/tesseract.exe"
+  psm: 6
+  zoom: 3.0
+
+# Reporting behaviour
+reporting:
+  current_period_mode: today    # 'today' | 'latest_with_data'
+  rag_amber_pct: 15             # actual up to +15% over plan = amber; more = red
+  standing_flags: [Food Delivery, Telecom, Subscriptions]
+
+# Sinking / savings funds
+sinking_funds:
+  school_fees:
+    label: "Term fund"
+    target_amount: 3990
+    due_periods: ["2026-04", "2026-07", "2026-12"]
+    iban: BH00EXAM00000000000000020   # <FILL IN> (same as school_iban)
+  emergency:
+    label: "Emergency / Savings"
+    target_amount: 10000
+    notes: "Proxy vs combined bank balances."

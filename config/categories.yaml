@@ -1,0 +1,46 @@
+# Canonical category taxonomy — SEED for the categories table (hand-editable).
+# kind:    income | expense | transfer | sinking
+# section: grouping shown in reports
+# plan:    the plan line (from 2026 Cash Flow) this category rolls up to for variance,
+#          or null if unbudgeted (shown as "unplanned"). Plan lines keep their native
+#          labels; variance groups actuals by this field.
+categories:
+  # ---- INCOME ----
+  Salary:              { section: INCOME,   kind: income,   plan: "Salary" }
+  Bonus & Allowances:  { section: INCOME,   kind: income,   plan: "Bonus + Allowances" }
+  Rental Income:       { section: INCOME,   kind: income,   plan: "Rental Income" }
+  Other Income:        { section: INCOME,   kind: income,   plan: "Other (Profit, etc.)" }
+  Cashback:            { section: INCOME,   kind: income,   plan: null }
+
+  # ---- INTERNAL (netted out of spend/income) ----
+  Internal Transfer:   { section: INTERNAL, kind: transfer, plan: null }
+
+  # ---- FIXED / OBLIGATIONS ----
+  Housing:             { section: FIXED,    kind: expense,  plan: "Rent" }
+  Car Loan:            { section: FIXED,    kind: expense,  plan: "Car Loan" }
+  Education:           { section: FIXED,    kind: sinking,  plan: "Term fund" }
+  School Transport:          { section: FIXED,    kind: expense,  plan: "School Transport" }
+  Activities:     { section: FIXED,    kind: expense,  plan: "Activities" }
+  Recipient B:      { section: FIXED,    kind: expense,  plan: "Recipient B" }
+  Recipient A:                { section: FIXED,    kind: expense,  plan: "Recipient A" }
+
+  # ---- VARIABLE / DISCRETIONARY ----
+  Groceries:           { section: VARIABLE, kind: expense,  plan: "Groceries" }
+  Food Delivery:       { section: VARIABLE, kind: expense,  plan: "Variable (Food, Fuel, etc.)" }
+  Dining:              { section: VARIABLE, kind: expense,  plan: "Variable (Food, Fuel, etc.)" }
+  Transport:           { section: VARIABLE, kind: expense,  plan: "Variable (Food, Fuel, etc.)" }
+  Subscriptions:       { section: VARIABLE, kind: expense,  plan: "Variable (Food, Fuel, etc.)" }
+  Health:              { section: VARIABLE, kind: expense,  plan: "Variable (Food, Fuel, etc.)" }
+  Shopping:            { section: VARIABLE, kind: expense,  plan: "Variable (Food, Fuel, etc.)" }
+  Insurance:           { section: VARIABLE, kind: expense,  plan: "Variable (Food, Fuel, etc.)" }
+  Personal Care:       { section: VARIABLE, kind: expense,  plan: "Variable (Food, Fuel, etc.)" }
+  Telecom:             { section: VARIABLE, kind: expense,  plan: null }
+
+  # ---- TRANSFERS OUT / OTHER (mostly unbudgeted) ----
+  Personal Transfer:     { section: OTHER,    kind: expense,  plan: null }
+  Charity:             { section: OTHER,    kind: expense,  plan: null }
+  Personal:            { section: OTHER,    kind: expense,  plan: null }
+  Government & Fees:   { section: OTHER,    kind: expense,  plan: null }
+  Bank Charges:        { section: OTHER,    kind: expense,  plan: null }
+  CC Debt Payoff:      { section: OTHER,    kind: expense,  plan: "CC Debt Payoff (Old)" }
+  Uncategorised:       { section: REVIEW,   kind: expense,  plan: null }
