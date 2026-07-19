@@ -51,6 +51,24 @@ writes `output/dashboard.html` + a Markdown summary.
 | `finance sync-notion [--dry-run]` | Push/preview the one-way Notion projection |
 | `python -m pytest` | Run the test suite |
 
+## Running it regularly
+
+The real update is monthly: after ~the 22nd, drop the new statement PDFs into `inbox/`
+and run `finance run`. Bank data arrives per statement cycle, so re-running with no new
+files is idempotent (0 new rows) — the only thing that shifts day to day is the
+month-to-date pacing line, which is computed against *today*.
+
+To keep that pacing view fresh automatically, `run-daily.cmd` is a one-line launcher
+that `cd`s to the repo (via `%~dp0`) and runs `finance run`. Point a scheduler at it —
+no working-directory or quoting gymnastics needed. On Windows:
+
+```
+schtasks /create /tn "FinanceTracker-Daily" /sc daily /st 07:30 /tr "<repo>\run-daily.cmd" /f
+```
+
+Runs as you, when logged in, no admin. Manage it with `schtasks /query|/run|/change|/delete`
+(each is a separate option — running `/delete` last will remove the task you just made).
+
 ## How it works
 
 - **Financial month = 23rd → 22nd**, named by the month containing the 22nd.
