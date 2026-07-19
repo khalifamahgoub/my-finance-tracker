@@ -6,21 +6,21 @@ so future sessions stay consistent. **Follow these exactly.**
 ## What this is
 A local, one-command pipeline: drop PDF statements + the plan `.xlsx` into `inbox/`, run
 `finance run`, get `output/dashboard.html` + a Markdown summary. Boring, maintainable
-Python over cleverness. glance-first: one entry point, flat structure.
+Python over cleverness. Glance-first: one entry point, flat structure.
 
 ## Run it (zero install)
 Everything is already in the system Python (3.13): pymupdf, pandas, openpyxl, PyYAML,
 Jinja2, stdlib sqlite3. Just:
 - `finance.cmd run` (or `python -m finance run`) — the one command.
 - `python -m finance init` — bootstrap/seed the DB. `python -m pytest` — tests.
-- Optional isolation: `uv sync --native-tls` (uv + truststore present for the TLS-inspecting proxy).
+- Optional isolation: `uv sync --native-tls` (uv + truststore handle a TLS-inspecting proxy).
 
 ## Hard domain rules (do not violate)
 - **Financial month = 23rd → 22nd**, named by the month containing the 22nd ("Feb 2026" =
   23 Jan–22 Feb). All bucketing goes through `finance/periods.py`. Salary lands ~25th → next period.
 - **Dedup key** = `sha1(source_account | date | amount.3f | norm_desc)`, scoped per source
   (`finance/normalise.py`). Re-runs are idempotent (`ON CONFLICT(dedup_key) DO NOTHING`).
-- **Internal transfers net out.** `own_account_ibans` (BH20/BH11 in `config/accounts.yaml`) +
+- **Internal transfers net out.** `own_account_ibans` (listed in `config/accounts.yaml`) +
   CC "Payment Received" + ila "Credit Card Payment" are `is_internal=1`; excluded from spend/income.
   CC line-item purchases are the real spend, counted once.
 - **Term fees are a sinking fund.** ≥3800 BHD to the school IBAN = term fee (`is_sinking`);
@@ -46,9 +46,10 @@ Jinja2, stdlib sqlite3. Just:
 - `khaleeji` — `AccountFullstatement_*.pdf` (filename = download date, NOT statement month;
   derive coverage from `Statement From…To…`).
 - `ila_cc` — `Statement-YYYYMMDD.pdf` in the ila CC folder. Two cardholders: sections
-  `Transactions on Card ending-XXXX` (primary) / `Supplementary Card ending-YYYY` (supplementary).
-  FX purchases = merchant line + FOREIGN EXCHANGE MARKUP + VAT (all real cost); `CR` = refund.
-- `ila_account` — `Statement-YYYYMMDD.pdf` in the ila Debit folder (own account BH20).
+  `Transactions on Card ending-XXXX` (primary) / `Supplementary Card ending-YYYY` (supplementary),
+  mapped by last-4 in `config/accounts.yaml`. FX purchases = merchant line + FOREIGN EXCHANGE
+  MARKUP + VAT (all real cost); `CR` = refund.
+- `ila_account` — `Statement-YYYYMMDD.pdf` in the ila Debit folder (an own current account).
 - Scope statements by **folder**, not the `Statement*` glob (it also matches debit + SAR/AED).
 
 ## Layout
