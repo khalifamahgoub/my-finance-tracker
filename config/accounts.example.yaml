@@ -46,6 +46,8 @@ reporting:
   current_period_mode: today    # 'today' | 'latest_with_data'
   rag_amber_pct: 15             # actual up to +15% over plan = amber; more = red
   standing_flags: [Food Delivery, Telecom, Subscriptions]
+  normalise_salary_period: true # pin each Salary paycheck to the period it funds (as if
+                                # paid on the 25th) so income is one-per-period despite drift
 
 # Sinking / savings funds
 sinking_funds:

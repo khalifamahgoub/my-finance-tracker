@@ -105,6 +105,29 @@ def categorise_all(conn: sqlite3.Connection, cfg: Config) -> dict:
         counts["review"] += c["needs_review"]
         if c["category"] == "Uncategorised":
             counts["uncategorised"] += 1
+    counts["salary_normalised"] = _normalise_salary_periods(conn, cfg)
     conn.commit()
     counts["total"] = len(rows)
     return counts
+
+
+def _normalise_salary_periods(conn: sqlite3.Connection, cfg: Config) -> int:
+    """Reassign each 'Salary' paycheck to the period it funds (as if paid on the 25th), so
+    income lands one-per-period despite the pay date drifting across the 23rd rollover.
+    Off when reporting.normalise_salary_period is false. Idempotent (period derived from the
+    txn date each run). Reconciliation is statement-level, so moving period_id is safe."""
+    from datetime import date
+    from . import db as dbm
+    from .periods import salary_period, period_row
+
+    if not (cfg.accounts.get("reporting", {}) or {}).get("normalise_salary_period", True):
+        return 0
+    moved = 0
+    for r in conn.execute(
+            "SELECT txn_id, txn_date, period_id FROM transactions WHERE category='Salary'").fetchall():
+        pid = salary_period(date.fromisoformat(r["txn_date"]))
+        if pid != r["period_id"]:
+            dbm.ensure_period(conn, period_row(pid))
+            conn.execute("UPDATE transactions SET period_id=? WHERE txn_id=?", (pid, r["txn_id"]))
+            moved += 1
+    return moved

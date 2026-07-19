@@ -19,6 +19,25 @@ def test_period_id_of(d, expected):
     assert p.period_id_of(d) == expected
 
 
+@pytest.mark.parametrize("pay_date,funds", [
+    (date(2026, 2, 25), "2026-03"),   # paid 25th -> next period (already correct)
+    (date(2026, 3, 18), "2026-04"),   # paid early (18th) -> still funds Apr, not Mar
+    (date(2026, 4, 22), "2026-05"),   # paid 22nd (< rollover) -> normalised forward
+    (date(2026, 5, 24), "2026-06"),
+    (date(2026, 6, 22), "2026-07"),
+    (date(2026, 2, 28), "2026-03"),   # any day in a month maps to one canonical period
+])
+def test_salary_period_is_one_per_calendar_month(pay_date, funds):
+    assert p.salary_period(pay_date) == funds
+
+
+def test_salary_period_gives_distinct_consecutive_periods():
+    # the exact drift that broke income: 18th one month, 24th the next
+    got = [p.salary_period(d) for d in
+           (date(2026, 3, 18), date(2026, 4, 22), date(2026, 5, 24))]
+    assert got == ["2026-04", "2026-05", "2026-06"]      # one each, no double, no gap
+
+
 def test_period_bounds():
     assert p.period_bounds("2026-02") == (date(2026, 1, 23), date(2026, 2, 22))
     assert p.period_bounds("2026-01") == (date(2025, 12, 23), date(2026, 1, 22))

@@ -26,6 +26,14 @@ def period_id_of(d: date) -> str:
     return f"{y:04d}-{m:02d}"
 
 
+def salary_period(d: date) -> str:
+    """The financial period a monthly paycheck funds, computed as if it were paid on the
+    25th of its calendar month. The pay date drifts across the 23rd rollover (some months
+    the 18th, others the 25th), which otherwise lands two paychecks in one period and none
+    in the next; normalising to the 25th gives exactly one paycheck per period."""
+    return period_id_of(d.replace(day=25))
+
+
 def period_bounds(period_id: str) -> tuple[date, date]:
     """(start, end) inclusive for a period id. Start = 23rd of prior month, end = 22nd."""
     y, m = _split(period_id)
