@@ -52,7 +52,8 @@ def test_apply_learns_and_recategorises(tmp_path, monkeypatch):
     dbp = tmp_path / "f.db"
     _make_db(dbp)
     cfg = Config(db_path=str(dbp))
-    monkeypatch.setattr(review, "CONFIG_DIR", tmp_path)      # learned.yaml -> tmp
+    monkeypatch.setattr(review, "CONFIG_DIR", tmp_path)      # _learn_keyword writes here
+    monkeypatch.setattr("finance.config.CONFIG_DIR", tmp_path)  # keyword_rules reads here (hermetic)
     entries = [
         {"rk": "BH12ABCD00000000000001", "is_iban": True, "category": "Groceries", "payee": "Corner Landlord"},
         {"rk": "CORNER SHOP MANAMA 048", "is_iban": False, "category": "Dining", "payee": ""},

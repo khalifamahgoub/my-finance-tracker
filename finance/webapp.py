@@ -57,7 +57,10 @@ def apply_and_recategorise(cfg: Config, entries: list[dict], reload_cfg=None) ->
         if e.get("is_iban"):
             review._confirm_iban(conn, e["rk"], (e.get("payee") or "").strip() or None, cat)
         else:
-            review._learn_keyword(review._key_from(e["rk"]), cat)
+            key = review._key_from(e["rk"])
+            if not key:                    # location/annotation line: not learnable
+                continue
+            review._learn_keyword(key, cat)
         applied += 1
     conn.commit()
     fresh = (reload_cfg or Config.load)()          # reload so learned.yaml keywords apply

@@ -58,7 +58,8 @@ class _FakeClient:
 
 
 def _wire(tmp_path, monkeypatch):
-    monkeypatch.setattr(review, "CONFIG_DIR", tmp_path)               # learned.yaml -> tmp
+    monkeypatch.setattr(review, "CONFIG_DIR", tmp_path)               # _learn_keyword writes here
+    monkeypatch.setattr("finance.config.CONFIG_DIR", tmp_path)        # keyword_rules reads here (hermetic)
     monkeypatch.setattr(notion_sync, "load_state",
                         lambda: {"databases": {"review_queue": "db1"}})
 

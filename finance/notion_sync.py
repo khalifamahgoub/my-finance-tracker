@@ -218,6 +218,8 @@ def review_rows(conn) -> list[dict]:
             """SELECT COALESCE(counterparty_iban, norm_desc) who, MAX(counterparty_iban) iban,
                       COUNT(*) n, -ROUND(SUM(CASE WHEN amount<0 THEN amount ELSE 0 END),3) amt
                FROM transactions WHERE needs_review=1 AND category='Uncategorised'
+                 AND NOT (counterparty_iban IS NULL AND (norm_desc LIKE 'FOREIGN EXCHANGE%'
+                          OR norm_desc LIKE 'VAT %' OR norm_desc LIKE 'NRT %'))
                GROUP BY who ORDER BY amt DESC LIMIT 100"""):
         out.append({
             "Counterparty": _title(r["who"][:80]),
@@ -409,11 +411,15 @@ def pull_review(cfg: Config, client=None, dry_run: bool = False, reload_cfg=None
         is_iban = _read_prop(page, "Type").strip().upper() == "IBAN" or _looks_like_iban(rk)
         payee = _read_prop(page, "Payee").strip() or None
         kind = "IBAN" if is_iban else "merchant"
+        key = None if is_iban else review._key_from(rk)
+        if not is_iban and not key:        # location/annotation line: not learnable
+            skipped += 1
+            continue
         if not dry_run:
             if is_iban:
                 review._confirm_iban(conn, rk, payee, category)
             else:
-                review._learn_keyword(review._key_from(rk), category)
+                review._learn_keyword(key, category)
         applied.append((page.get("id"), rk, category, kind))
 
     if dry_run:

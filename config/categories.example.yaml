@@ -14,6 +14,7 @@ categories:
   Rental Income:       { section: INCOME,   kind: income,   plan: "Rental Income" }
   Other Income:        { section: INCOME,   kind: income,   plan: "Other Income" }
   Cashback:            { section: INCOME,   kind: income,   plan: null }
+  Refund:              { section: INCOME,   kind: income,   plan: null }
 
   # ---- INTERNAL (netted out) ----
   Internal Transfer:   { section: INTERNAL, kind: transfer, plan: null }
@@ -35,6 +36,11 @@ categories:
   Subscriptions:       { section: VARIABLE, kind: expense,  plan: "Variable" }
   Health:              { section: VARIABLE, kind: expense,  plan: "Variable" }
   Shopping:            { section: VARIABLE, kind: expense,  plan: "Variable" }
+  Clothing:            { section: VARIABLE, kind: expense,  plan: "Variable" }
+  Electronics:         { section: VARIABLE, kind: expense,  plan: "Variable" }
+  Gold & Jewellery:    { section: VARIABLE, kind: expense,  plan: "Variable" }
+  Travel:              { section: VARIABLE, kind: expense,  plan: null }
+  Entertainment:       { section: VARIABLE, kind: expense,  plan: "Variable" }
   Insurance:           { section: VARIABLE, kind: expense,  plan: "Variable" }
   Personal Care:       { section: VARIABLE, kind: expense,  plan: "Variable" }
   Telecom:             { section: VARIABLE, kind: expense,  plan: null }
@@ -44,6 +50,7 @@ categories:
   Charity:             { section: OTHER,    kind: expense,  plan: null }
   Personal:            { section: OTHER,    kind: expense,  plan: null }
   Government & Fees:   { section: OTHER,    kind: expense,  plan: null }
+  Visa & Immigration:  { section: OTHER,    kind: expense,  plan: null }
   Bank Charges:        { section: OTHER,    kind: expense,  plan: null }
   CC Debt Payoff:      { section: OTHER,    kind: expense,  plan: "CC Debt Payoff" }
   Uncategorised:       { section: REVIEW,   kind: expense,  plan: null }

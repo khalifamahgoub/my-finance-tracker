@@ -32,10 +32,15 @@ def _iban_groups(conn, limit):
 
 
 def _merchant_groups(conn, limit):
+    # FX-markup / VAT / NRT lines are excluded: they carry their parent merchant's name
+    # and inherit its category, so they must not be tagged (or learned) on their own.
     return conn.execute(
         """SELECT norm_desc, COUNT(*) AS n, -ROUND(SUM(amount),3) AS amt
            FROM transactions WHERE needs_review=1 AND counterparty_iban IS NULL
              AND category='Uncategorised'
+             AND norm_desc NOT LIKE 'FOREIGN EXCHANGE%'
+             AND norm_desc NOT LIKE 'VAT %'
+             AND norm_desc NOT LIKE 'NRT %'
            GROUP BY norm_desc ORDER BY n DESC, amt DESC LIMIT ?""", (limit,)).fetchall()
 
 
@@ -48,7 +53,9 @@ def _confirm_iban(conn, iban, payee, category):
         (iban, payee, category, datetime.now(timezone.utc).isoformat(timespec="seconds")))
 
 
-def _learn_keyword(keyword: str, category: str):
+def _learn_keyword(keyword: str | None, category: str):
+    if not keyword:                       # non-distinctive / annotation line: nothing to learn
+        return
     path = CONFIG_DIR / "learned.yaml"
     data = {}
     if path.exists():
@@ -101,7 +108,10 @@ def run_review(cfg: Config, limit: int = 25, stream=None) -> int:
         category = line.strip()
         if category not in cats:
             print(f"  ! unknown category {category!r} - skipped"); continue
-        _learn_keyword(_key_from(g["norm_desc"]), category)
+        key = _key_from(g["norm_desc"])
+        if not key:
+            print("  (location/annotation line — inherits parent; skipped)"); continue
+        _learn_keyword(key, category)
         resolved += 1
 
     conn.commit()
@@ -127,7 +137,29 @@ def _split(line: str):
     return None, line.strip()
 
 
-def _key_from(norm_desc: str) -> str:
-    """A stable keyword from a merchant description: first 2-3 significant tokens."""
-    toks = [t for t in norm_desc.split() if len(t) > 1 and not t.isdigit()]
-    return " ".join(toks[:2]) if toks else norm_desc
+# Bahrain area names + generic geo words that must never become a keyword on their own —
+# they appear across unrelated merchants and cause mass mis-tagging (e.g. MANAMA -> Shopping
+# matched 500+ transactions). Kept out of learned keywords; a distinctive merchant token
+# must survive alongside them.
+_GEO = {
+    "MANAMA", "SEEF", "SAAR", "JANABIYAH", "ALJANABIYAH", "MUHARRAQ", "HIDD", "RIFFA",
+    "BUDAIYA", "SANABIS", "JUFFAIR", "ADLIYA", "ZALLAQ", "BUSAITEEN", "SALMABAD", "TUBLI",
+    "GUDAIBIYA", "MARKH", "ARAD", "GALALI", "DIRAZ", "BILAD", "SALMANIYA", "MAHOOZ", "SANAD",
+    "WADI", "BUQUWAH", "BAHRAIN", "BHR", "DISTRICT", "TOWN", "MALL", "FRONT", "SEA",
+}
+# FX-markup / VAT / NRT lines prefix every foreign purchase and inherit the parent
+# merchant's category — never learnable as keywords.
+_NONLEARN_PREFIX = ("FOREIGN EXCHANGE", "VAT ", "NRT ")
+
+
+def _key_from(norm_desc: str) -> str | None:
+    """A distinctive keyword from a merchant description: the first two significant tokens,
+    dropping digits and geo/location words. Returns None when nothing distinctive remains
+    (a pure-location string) or the line is an FX-markup/VAT/NRT annotation — those must
+    never become keywords."""
+    if norm_desc.upper().strip().startswith(_NONLEARN_PREFIX):
+        return None
+    toks = [t for t in norm_desc.split()
+            if len(t) > 1 and not t.isdigit() and t.upper() not in _GEO]
+    key = " ".join(toks[:2]).strip()
+    return key or None
