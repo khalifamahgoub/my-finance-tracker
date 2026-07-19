@@ -3,7 +3,7 @@
   2. internal description keyword -> Internal Transfer (ila account: CC payment/Hassala/USD)
   3. CC 'Payment Received'        -> Internal Transfer (the payment leg)
   4. school IBAN                  -> Education (+sinking if >= term-fee threshold)
-  5. remittance-hub IBAN          -> Recipient A / Recipient B (amount split)
+  5. remittance-hub IBAN          -> config-driven split by amount band
   6. IBAN directory               -> mapped payee's category (REVIEW flag still flags)
   7. merchant keyword (rules.yaml)-> category
   8. fallback                     -> Uncategorised (+needs_review)

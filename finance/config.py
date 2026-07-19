@@ -67,7 +67,7 @@ class Config:
     def load(cls) -> "Config":
         return cls(
             accounts=load_config("accounts"),      # real (gitignored) or .example
-            categories=_load_yaml(CONFIG_DIR / "categories.yaml"),
+            categories=load_config("categories"),  # real (gitignored) or .example
             rules=_load_yaml(CONFIG_DIR / "rules.yaml"),
             iban_map=load_config("iban_map"),      # real (gitignored) or .example
         )

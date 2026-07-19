@@ -32,9 +32,9 @@ def test_school_class():
 
 def test_remittance_split():
     remit = "BH00RMIT00000000000004"
-    split = {"default_amount": 350, "band_amount": 180}
-    assert tf.remittance_class(remit, -180, remit, split) == "Recipient A"
-    assert tf.remittance_class(remit, -350, remit, split) == "Recipient B"
+    split = {"band_amount": 180, "band_category": "Recipient A", "default_category": "Recipient B"}
+    assert tf.remittance_class(remit, -180, remit, split) == "Recipient A"   # near the band
+    assert tf.remittance_class(remit, -350, remit, split) == "Recipient B"   # default
     assert tf.remittance_class("BH00OWNA00000000000001", -180, remit, split) is None
 
 

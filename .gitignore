@@ -20,6 +20,7 @@ finance-tracker-handover-prompt.md
 
 # Personal config — real values stay local; only the sanitized *.example.yaml is committed
 config/accounts.yaml
+config/categories.yaml
 config/iban_map.yaml
 config/notion.yaml
 config/learned.yaml

@@ -37,12 +37,15 @@ def school_class(iban: str | None, amount: float, school_iban: str | None,
 
 def remittance_class(iban: str | None, amount: float, remit_iban: str | None,
                      split: dict) -> str | None:
-    """The Remittance Hub IBAN is shared between two recipients; split by amount
-    band (only an IBAN rule can't, so the amount decides). Falls back to Recipient B."""
+    """A shared remittance IBAN split between two recipients by amount band. The band
+    amount and both category names come from config (`remittance_split`), so no category
+    labels are hard-coded here — amounts near `band_amount` map to `band_category`,
+    everything else to `default_category`."""
     if not iban or not remit_iban or iban.upper() != remit_iban.upper():
         return None
-    a = abs(amount)
-    band = float(split.get("band_amount", 180))
-    if abs(a - band) <= band * 0.25:
-        return "Recipient A"
-    return "Recipient B"
+    band = float(split.get("band_amount", 0) or 0)
+    band_cat = split.get("band_category")
+    default_cat = split.get("default_category")
+    if band and band_cat and abs(abs(amount) - band) <= band * 0.25:
+        return band_cat
+    return default_cat

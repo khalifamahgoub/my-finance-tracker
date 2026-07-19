@@ -28,11 +28,12 @@ cardholder_names:
 school_iban: BH00EXAM00000000000000020   # <FILL IN>
 school_term_fee_min: 3800     # transfer >= this to the school IBAN = term fee (sinking)
 
-# Remittance hub shared between two recipients; split by amount band.
+# A shared remittance IBAN split between two recipients by amount band.
 remittance_hub_iban: BH00EXAM00000000000000021   # <FILL IN>
 remittance_split:
-  default_amount: 350
-  band_amount: 180
+  band_amount: 180                # amounts near this map to band_category
+  band_category: "Recipient A"    # <FILL IN> a category name from categories.yaml
+  default_category: "Recipient B" # <FILL IN>
 
 # OCR fallback (dormant). Native-text parsing covers current statements.
 ocr:
