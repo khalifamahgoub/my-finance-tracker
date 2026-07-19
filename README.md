@@ -7,6 +7,10 @@ the source of truth; no cloud required.
 > The spec lives in [`PRD.md`](PRD.md) (sanitized). The `config/*.yaml` you actually run
 > with are gitignored; only sanitized `config/*.example.yaml` templates are committed.
 
+![The generated dashboard, rendered from synthetic demo data](assets/dashboard.png)
+
+<sub>Screenshot generated from **synthetic** data — every amount, merchant, and IBAN above is fabricated for the demo, not real financials.</sub>
+
 ## Build status
 
 [![tests](https://github.com/khalifamahgoub/my-finance-tracker/actions/workflows/tests.yml/badge.svg)](https://github.com/khalifamahgoub/my-finance-tracker/actions/workflows/tests.yml)
