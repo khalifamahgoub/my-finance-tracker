@@ -109,10 +109,15 @@ class IlaCcParser(StatementParser):
 
     @staticmethod
     def _totals(rows: list[str]) -> dict:
-        """Header summary row: Opening  TotalDebits  TotalCredits  Current  [MinDue]."""
+        """Header summary row: Opening  TotalDebits  TotalCredits  Current  [MinDue] [DueDate].
+
+        Only the summary row carries >= 4 monetary amounts while not starting with a
+        transaction date; a trailing payment-due date (dd/mm/yyyy, no decimal) shares the
+        visual line but is not a monetary amount, so the first four amounts are the totals.
+        """
         for row in rows:
             nums = _AMOUNT.findall(row)
-            if len(nums) >= 4 and _DATE.match(row) is None and "/" not in row:
+            if len(nums) >= 4 and _DATE.match(row) is None:
                 vals = [parse_amount(n) for n in nums]
                 return {"opening": vals[0], "total_debits": vals[1],
                         "total_credits": vals[2], "current": vals[3]}
