@@ -57,6 +57,8 @@ Jinja2, stdlib sqlite3. Just:
 
 ## Layout
 `finance/` package (cli, config, db, periods, normalise, ingest, parsers/, categorise,
-transfers, plan, variance, sinking, report_html, report_md, notion_sync). `config/` YAML seeds.
+transfers, plan, variance, sinking, report_html, report_md, notion_sync, webapp). `config/` YAML seeds.
+`webapp` is a stdlib-only localhost app (`finance web`) that serves the live dashboard and a
+tag form; it reuses `review.py`'s learning helpers so tagging is identical across CLI/Notion/web.
 `inbox/`→`archive/YYYY-MM/`. `output/` dashboard + summaries. `tests/`. Raw statements live in
 `Docs/` (gitignored); the initial backfill copies them into `inbox/`.

@@ -73,6 +73,11 @@ def cmd_narrate(args: argparse.Namespace) -> int:
     return narrate.narrate(Config.load(), period=args.period, dry_run=args.dry_run)
 
 
+def cmd_web(args: argparse.Namespace) -> int:
+    from . import webapp
+    return webapp.serve(Config.load(), port=args.port, open_browser=not args.no_open)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="finance", description="Personal finance tracker (Bahrain, tri-account).")
@@ -106,6 +111,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_narr.add_argument("period", nargs="?", default=None, help="period, e.g. 'Feb 2026' (default: current)")
     p_narr.add_argument("--dry-run", action="store_true", help="print the prompt; call nothing")
     p_narr.set_defaults(func=cmd_narrate)
+
+    p_web = sub.add_parser("web", help="interactive local dashboard: explore + tag")
+    p_web.add_argument("--port", type=int, default=8765, help="localhost port (default 8765)")
+    p_web.add_argument("--no-open", action="store_true", help="don't auto-open the browser")
+    p_web.set_defaults(func=cmd_web)
     return parser
 
 
