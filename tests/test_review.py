@@ -24,9 +24,17 @@ def test_key_from_rejects_location_and_annotation_lines():
 
 def test_key_from_keeps_the_distinctive_merchant_token():
     assert review._key_from("CORNER SHOP MANAMA 048") == "CORNER SHOP"
-    assert review._key_from("CINEPOLIS SAAR 048") == "CINEPOLIS"        # geo 'SAAR' dropped
+    assert review._key_from("CINEPOLIS SAAR 048") == "CINEPOLIS"        # geo 'SAAR' ends the phrase
     assert review._key_from("KABBANI CAIRO EGY") == "KABBANI CAIRO"     # non-Bahrain geo kept
-    assert review._key_from("668 CAFE MANAMA MA") == "CAFE MA"          # digits + 'MANAMA' dropped
+    assert review._key_from("668 CAFE MANAMA MA") == "CAFE"             # digit skipped, geo ends it
+
+
+def test_key_from_is_always_a_contiguous_substring():
+    # the learned keyword must actually appear in the description, or it never matches
+    for desc in ["JUMPSTERS W L L SAR SAAR 048", "GLOBAL E ADIDAS LONDON GBR",
+                 "AESERVER C AESERVER 7 ABU DHABI AZ", "YUSUF A WAHAB AL HAWAJ SEEF 048"]:
+        key = review._key_from(desc)
+        assert key and key in desc, f"{key!r} not a substring of {desc!r}"
 
 
 def test_merchant_queue_excludes_fx_and_vat_lines():

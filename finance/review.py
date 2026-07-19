@@ -153,13 +153,23 @@ _NONLEARN_PREFIX = ("FOREIGN EXCHANGE", "VAT ", "NRT ")
 
 
 def _key_from(norm_desc: str) -> str | None:
-    """A distinctive keyword from a merchant description: the first two significant tokens,
-    dropping digits and geo/location words. Returns None when nothing distinctive remains
-    (a pure-location string) or the line is an FX-markup/VAT/NRT annotation — those must
-    never become keywords."""
+    """The leading distinctive token(s) of a merchant description, as a CONTIGUOUS phrase so
+    the learned keyword actually substring-matches the transaction. Skips leading digits,
+    single characters and geo/location words; extends to a second token only when it sits
+    immediately next to the first and is itself significant (so 'JUMPSTERS W L L SAR' learns
+    'JUMPSTERS', not the non-matching 'JUMPSTERS SAR'). Returns None for pure-location
+    strings or FX/VAT/NRT annotation lines (those inherit the parent purchase)."""
     if norm_desc.upper().strip().startswith(_NONLEARN_PREFIX):
         return None
-    toks = [t for t in norm_desc.split()
-            if len(t) > 1 and not t.isdigit() and t.upper() not in _GEO]
-    key = " ".join(toks[:2]).strip()
-    return key or None
+    toks = norm_desc.split()
+
+    def sig(t: str) -> bool:
+        return len(t) > 1 and not t.isdigit() and t.upper() not in _GEO
+
+    i = next((j for j, t in enumerate(toks) if sig(t)), None)
+    if i is None:
+        return None
+    key = toks[i]
+    if i + 1 < len(toks) and sig(toks[i + 1]):
+        key = f"{key} {toks[i + 1]}"
+    return key
