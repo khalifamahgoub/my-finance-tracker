@@ -48,7 +48,8 @@ writes `output/dashboard.html` + a Markdown summary.
 | `finance run --narrate` | …and print an AI narrative (needs `ANTHROPIC_API_KEY`) |
 | `finance review` | Interactively name unknown IBANs/merchants (learns permanently) |
 | `finance period "Feb 2026"` | Regenerate any past month |
-| `finance sync-notion [--dry-run]` | Push/preview the one-way Notion projection |
+| `finance sync-notion [--dry-run]` | Push/preview the Notion projection |
+| `finance sync-notion --pull` | Read Review Queue Category tags back into SQLite, re-categorise |
 | `python -m pytest` | Run the test suite |
 
 ## Running it regularly
@@ -80,7 +81,9 @@ Runs as you, when logged in, no admin. Manage it with `schtasks /query|/run|/cha
   spend; credit-card purchases are the real spend, counted once.
 - **Plan vs actual** from an annual cash-flow sheet, with RAG status, standing flags,
   and school/emergency sinking funds.
-- **Notion sync** is a one-way, idempotent projection — SQLite never loses authority.
+- **Notion sync** is an idempotent projection — SQLite keeps authority. The one exception
+  is the Review Queue: tag its Category column in Notion and `sync-notion --pull` learns
+  those tags back (IBAN → `iban_map`, merchant → `learned.yaml`), then re-categorises.
 
 ## Layout
 

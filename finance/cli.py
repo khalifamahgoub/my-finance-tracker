@@ -62,7 +62,10 @@ def cmd_period(args: argparse.Namespace) -> int:
 
 def cmd_sync_notion(args: argparse.Namespace) -> int:
     from . import notion_sync
-    return notion_sync.sync(Config.load(), dry_run=args.dry_run)
+    cfg = Config.load()
+    if getattr(args, "pull", False):
+        return notion_sync.pull_review(cfg, dry_run=args.dry_run)
+    return notion_sync.sync(cfg, dry_run=args.dry_run)
 
 
 def cmd_narrate(args: argparse.Namespace) -> int:
@@ -95,6 +98,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_sync = sub.add_parser("sync-notion", help="push a projection to the Notion hub")
     p_sync.add_argument("--dry-run", action="store_true", help="print what would sync; touch nothing")
+    p_sync.add_argument("--pull", action="store_true",
+                        help="read Review Queue Category tags back into SQLite, then re-categorise")
     p_sync.set_defaults(func=cmd_sync_notion)
 
     p_narr = sub.add_parser("narrate", help="AI 3-line summary of a period (Claude API)")

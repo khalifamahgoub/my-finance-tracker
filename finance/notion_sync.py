@@ -1,24 +1,30 @@
-"""One-way SQLite -> Notion projection (Phase 4). SQLite stays the source of truth;
-Notion is a derived, browsable, AI-queryable mirror and never feeds back.
+"""SQLite -> Notion projection (Phase 4). SQLite stays the source of truth; Notion is a
+derived, browsable, AI-queryable mirror. The push never feeds back — with ONE scoped
+exception: the Review Queue is a two-way surface. You fill its Category (and Payee, for
+IBANs) column in Notion, and `sync-notion --pull` reads those edits back and learns them
+exactly as `finance review` would (IBAN -> iban_map source='confirmed'; merchant ->
+learned.yaml), then re-categorises. Nothing else in Notion is ever read back.
 
 Headless via the Notion REST API. The integration token is user-provisioned in the
 NOTION_TOKEN env var (create an internal integration, share the hub page with it) — this
 module never sees or stores the secret. Idempotent: each row carries its SQLite key
 (dedup_key / file_hash / period_id) as a Notion property, so re-syncing updates in place.
 
-    finance sync-notion            # create child DBs if needed, sync the projection
+    finance sync-notion            # create child DBs if needed, push the projection
     finance sync-notion --dry-run  # print exactly what would sync; touches nothing
+    finance sync-notion --pull      # read Review Queue tags back into SQLite, re-categorise
 
 Projection layers (mapped onto the hub's four sections):
     Transactions   (current + trailing N months detail)   -> "3 — Statements"
     Statements     (one row per ingested file)             -> "3 — Statements"
     Monthly Summary(per-period KPIs)                        -> "2 — This month"
-    Review Queue   (needs_review groups)                   -> "2 — This month"
+    Review Queue   (needs_review groups; tag back via --pull) -> "2 — This month"
     Reference      (named IBAN directory)                  -> "4 — Reference vault"
 """
 from __future__ import annotations
 
 import os
+import re
 import time
 from pathlib import Path
 
@@ -89,6 +95,8 @@ SCHEMAS = {
             "Type": {"select": {}},
             "Count": {"number": {"format": "number"}},
             "Amount": {"number": {"format": "number"}},
+            "Payee": {"rich_text": {}},   # you fill (IBAN rows): the payee name to record
+            "Category": {"select": {}},   # you fill: the category -> pulled back by --pull
             "rk": {"rich_text": {}},
         },
         "key": "rk",
@@ -312,6 +320,22 @@ class NotionClient:
     def update_page(self, page_id, props):
         return self._req("PATCH", f"/pages/{page_id}", json={"properties": props})
 
+    def query_all(self, db_id) -> list[dict]:
+        """Every page in a database, following pagination."""
+        out, cursor = [], None
+        while True:
+            body = {"page_size": 100}
+            if cursor:
+                body["start_cursor"] = cursor
+            res = self._req("POST", f"/databases/{db_id}/query", json=body)
+            out.extend(res.get("results", []))
+            if not res.get("has_more"):
+                return out
+            cursor = res.get("next_cursor")
+
+    def archive_page(self, page_id):
+        return self._req("PATCH", f"/pages/{page_id}", json={"archived": True})
+
 
 def _key_value(row: dict, key_prop: str) -> str:
     val = row.get(key_prop)
@@ -322,6 +346,96 @@ def _key_value(row: dict, key_prop: str) -> str:
     if "title" in val and val["title"]:
         return val["title"][0]["text"]["content"]
     return ""
+
+
+# ---- write-back (Notion Review Queue -> SQLite) -----------------------------
+_IBAN_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{10,}$")
+
+
+def _looks_like_iban(s: str) -> bool:
+    return bool(_IBAN_RE.match(s.strip()))
+
+
+def _read_prop(page: dict, name: str) -> str:
+    """Flatten one Notion page property (select / rich_text / title) to plain text."""
+    p = (page.get("properties") or {}).get(name)
+    if not p:
+        return ""
+    if p.get("select") is not None or "select" in p:
+        sel = p.get("select")
+        return (sel.get("name") if sel else "") or ""
+    for kind in ("rich_text", "title"):
+        if kind in p:
+            return "".join(
+                (x.get("plain_text") or x.get("text", {}).get("content", ""))
+                for x in (p.get(kind) or []))
+    return ""
+
+
+def pull_review(cfg: Config, client=None, dry_run: bool = False, reload_cfg=None) -> int:
+    """Read the Notion Review Queue back into SQLite. For each row you tagged with a valid
+    Category, learn it the same way `finance review` does (IBAN -> iban_map confirmed;
+    merchant -> learned.yaml), re-categorise, and archive the resolved Notion row.
+    `reload_cfg` (default Config.load) supplies the post-learn config so freshly learned
+    merchant keywords take effect on the re-categorise pass.
+    """
+    from . import review, categorise
+    conn = dbm.connect(cfg.db_path)
+    db_id = (load_state().get("databases") or {}).get("review_queue")
+    if not db_id:
+        conn.close()
+        print("No Review Queue database in Notion yet. Run `finance sync-notion` first, "
+              "tag rows there, then re-run with --pull.")
+        return 1
+    if client is None:
+        token = os.environ.get("NOTION_TOKEN")
+        if not token:
+            conn.close()
+            print("NOTION_TOKEN is not set — cannot read the Notion Review Queue.")
+            return 1
+        client = NotionClient(token)
+
+    cats = review._valid_categories(conn)
+    applied, skipped = [], 0
+    for page in client.query_all(db_id):
+        rk = _read_prop(page, "rk").strip()
+        category = _read_prop(page, "Category").strip()
+        if not rk or not category:
+            continue                      # untouched row: nothing to learn
+        if category not in cats:
+            print(f"  ! {rk[:40]}: unknown category {category!r} — skipped")
+            skipped += 1
+            continue
+        is_iban = _read_prop(page, "Type").strip().upper() == "IBAN" or _looks_like_iban(rk)
+        payee = _read_prop(page, "Payee").strip() or None
+        kind = "IBAN" if is_iban else "merchant"
+        if not dry_run:
+            if is_iban:
+                review._confirm_iban(conn, rk, payee, category)
+            else:
+                review._learn_keyword(review._key_from(rk), category)
+        applied.append((page.get("id"), rk, category, kind))
+
+    if dry_run:
+        print(f"--dry-run: would apply {len(applied)} tag(s), skip {skipped}. Nothing written.")
+        for _, rk, category, kind in applied[:25]:
+            print(f"    [{kind}] {rk[:44]} -> {category}")
+        conn.close()
+        return 0
+
+    conn.commit()
+    fresh = (reload_cfg or Config.load)()      # reload so learned.yaml keywords apply
+    counts = categorise.categorise_all(conn, fresh)
+    for page_id, _, _, _ in applied:           # tidy the queue: drop resolved rows
+        try:
+            client.archive_page(page_id)
+        except Exception as e:                 # non-fatal: the learning already landed
+            print(f"  (could not archive {page_id}: {e})")
+    conn.close()
+    pct = 100 * counts["uncategorised"] / counts["total"] if counts["total"] else 0
+    print(f"Applied {len(applied)} Notion tag(s), skipped {skipped}. "
+          f"Uncategorised now {counts['uncategorised']}/{counts['total']} ({pct:.1f}%).")
+    return 0
 
 
 # ---- orchestration ----------------------------------------------------------

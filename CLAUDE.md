@@ -29,8 +29,11 @@ Jinja2, stdlib sqlite3. Just:
 - **BHD only.** AED/SAR accounts are out of scope for v1.
 
 ## Architecture
-- **SQLite (`finance.db`) is the system of record + compute engine.** Notion is a one-way,
-  optional projection only (`finance sync-notion`, Phase 4) — never feeds back.
+- **SQLite (`finance.db`) is the system of record + compute engine.** Notion is an optional
+  projection (`finance sync-notion`, Phase 4). It does not feed back, with ONE scoped
+  exception: `sync-notion --pull` reads the Review Queue's Category/Payee tags back and learns
+  them (IBAN → `iban_map` confirmed; merchant → `learned.yaml`) via the same `review.py`
+  helpers, then re-categorises. Everything else in Notion stays read-only-derived.
 - **Config is data, not code.** `config/*.yaml` (iban_map, categories, rules, accounts) is
   hand-editable; the DB seeds from it. Review-confirmed IBANs → `iban_map` (source='confirmed',
   never clobbered by re-seed); confirmed keywords → `rules.yaml`.
