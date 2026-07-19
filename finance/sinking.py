@@ -60,7 +60,7 @@ def emergency_fund(conn: sqlite3.Connection, cfg: Config) -> dict:
 
 def investable_surplus(conn: sqlite3.Connection, cfg: Config, period_id: str,
                        net: float) -> dict:
-    """Net after the school set-aside = suggested transfer to invest (e.g. a brokerage)."""
+    """Net after the term set-aside = suggested transfer to invest (e.g. a brokerage)."""
     school = school_fund(conn, cfg, period_id)
     set_aside = school["suggested_monthly"]
     surplus = round(max(0.0, net - set_aside), 3)

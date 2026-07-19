@@ -10,8 +10,7 @@ inbox/*
 # Raw statements (personal financial data — never commit)
 Docs/
 
-# Personal spec/handover (real IBANs, names, income, family) — kept local, README is committed
-PRD.md
+# Raw handover note (personal detail) — kept local; the sanitized PRD.md is committed
 finance-tracker-handover-prompt.md
 
 # Secrets

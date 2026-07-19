@@ -4,9 +4,8 @@ A local, one-command pipeline that turns monthly bank/credit-card PDF statements
 dashboard and a plan-vs-actual variance report. Boring, maintainable Python; SQLite is
 the source of truth; no cloud required.
 
-> The detailed spec lives in `PRD.md`, which is **gitignored** because it contains
-> personal financial detail. The `config/*.yaml` you actually run with are gitignored
-> too — only sanitized `config/*.example.yaml` templates are committed.
+> The spec lives in [`PRD.md`](PRD.md) (sanitized). The `config/*.yaml` you actually run
+> with are gitignored; only sanitized `config/*.example.yaml` templates are committed.
 
 ## Build status
 
@@ -75,5 +74,6 @@ tests/            pytest suite
 ## Privacy
 
 Gitignored (never committed): `Docs/` (raw statements), `finance.db`, `output/`,
-`archive/`, `PRD.md`, and the real `config/{accounts,iban_map,notion,learned}.yaml`.
-Only sanitized templates and code are tracked, so the repo is safe to push.
+`archive/`, the raw handover note, and the real
+`config/{accounts,categories,iban_map,notion,learned}.yaml`. Only sanitized templates,
+a sanitized `PRD.md`, and code are tracked, so the repo is safe to push.
