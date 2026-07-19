@@ -3,182 +3,246 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Finance — {{ period_label }}</title>
+<title>Finance: {{ period_label }}</title>
 <style>
   :root{
-    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --ink:#e8eaed; --muted:#9aa0aa;
-    --line:#2a2f3a; --accent:#6ea8fe; --green:#3fb950; --amber:#d29922; --red:#f85149;
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --ink:#eceef2; --muted:#a3a9b4;
+    --line:#2a2f3a; --accent:#7cb3ff; --accent-weak:#1b2735;
+    --green:#43b95a; --amber:#d8a23a; --red:#ff6b63;
     --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   @media (prefers-color-scheme:light){
-    :root{--bg:#f6f7f9;--card:#fff;--card2:#f0f2f5;--ink:#1a1d24;--muted:#5b6270;
-          --line:#e3e6eb;--accent:#2563eb;--green:#1a7f37;--amber:#9a6700;--red:#cf222e;}
+    :root{--bg:#f5f6f8;--card:#fff;--card2:#eef1f5;--ink:#171a21;--muted:#535a67;
+          --line:#e0e4ea;--accent:#1f5fd0;--accent-weak:#eaf1fd;
+          --green:#137a34;--amber:#8a5d00;--red:#c62f26;}
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px;}
-  h1{font-size:26px;margin:0 0 2px;letter-spacing:-.02em;}
-  h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
-     margin:34px 0 12px;font-weight:600;}
-  .sub{color:var(--muted);font-size:13px;margin-bottom:6px;}
-  .banner{background:color-mix(in srgb,var(--amber) 18%,transparent);
-          border:1px solid var(--amber);color:var(--ink);padding:10px 14px;border-radius:10px;
-          margin:14px 0;font-size:14px;}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
-  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;}
-  .card .v{font:600 26px/1.1 var(--mono);margin-top:8px;letter-spacing:-.01em;}
-  .card .v.small{font-size:20px}
-  .card.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,var(--card)),var(--card));
-             border-color:var(--accent);}
-  .pos{color:var(--green)} .neg{color:var(--red)}
-  table{width:100%;border-collapse:collapse;font-size:14px;}
-  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
-  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;}
-  td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap;}
-  tr.green td.rag{color:var(--green)} tr.amber td.rag{color:var(--amber)} tr.red td.rag{color:var(--red)}
-  .card2{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:4px 18px;}
-  .bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:5px;}
-  .bar > i{display:block;height:100%;background:var(--accent);}
-  .bar.green>i{background:var(--green)} .bar.amber>i{background:var(--amber)} .bar.red>i{background:var(--red)}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);
+       -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:940px;margin:0 auto;padding:32px 20px 72px;overflow-x:hidden;}
+  h1{font-size:28px;line-height:1.1;margin:0 0 3px;letter-spacing:-.02em;text-wrap:balance;}
+  h2{font-size:17px;font-weight:650;color:var(--ink);letter-spacing:-.01em;
+     margin:40px 0 14px;padding-bottom:7px;border-bottom:1px solid var(--line);}
+  .sub{color:var(--muted);font-size:13px;}
+  .verdict{margin:16px 0 4px;font-size:16px;line-height:1.45;max-width:68ch;text-wrap:pretty;}
+  .verdict b{font-weight:650}
+  .banner{background:var(--accent-weak);border:1px solid var(--accent);color:var(--ink);
+          padding:10px 14px;border-radius:10px;margin:16px 0;font-size:14px;}
+  .pos{color:var(--green)} .neg{color:var(--red)} .muted{color:var(--muted)} .tiny{font-size:12px}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;}
+
+  /* summary bar (KPIs) */
+  .summary{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:14px;
+           background:var(--card);margin-top:18px;overflow:hidden;}
+  .cell{flex:1 1 140px;padding:15px 18px;border-left:1px solid var(--line);}
+  .cell:first-child{border-left:none}
+  .cell .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+  .cell .v{font:600 25px/1.15 var(--mono);margin-top:7px;letter-spacing:-.01em;}
+  .cell.key{background:var(--card2)} .cell.key .v{font-size:27px}
+
+  /* net trend sparkline */
+  .trend{display:flex;align-items:flex-end;gap:14px;margin-top:12px;padding:14px 18px;
+         border:1px solid var(--line);border-radius:14px;background:var(--card);}
+  .trend .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+            writing-mode:horizontal-tb;align-self:center;min-width:96px;}
+  .spark{display:flex;align-items:flex-end;gap:8px;height:44px;flex:1;}
+  .col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;flex:1;}
+  .colbar{width:100%;max-width:26px;border-radius:3px 3px 0 0;min-height:2px;}
+  .colbar.up{background:var(--green)} .colbar.down{background:var(--red)}
+  .collab{font:11px var(--mono);color:var(--muted)}
+
+  /* action strip */
+  .action{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 16px;margin-top:12px;
+          padding:14px 18px;border:1px solid var(--accent);border-radius:14px;background:var(--accent-weak);}
+  .action .lbl{font-weight:650} .action .amt{font:700 24px/1 var(--mono);color:var(--accent);letter-spacing:-.01em;}
+  .action .why{color:var(--muted);font-size:13px;margin-left:auto;}
+
+  .pace{margin-top:12px;padding:12px 18px;border:1px solid var(--line);border-radius:12px;
+        background:var(--card);font-size:14px;}
+
+  /* tables */
+  .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:440px;}
+  caption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);}
+  thead th{color:var(--muted);font-weight:600;font-size:12px;}
+  td.num,th.num{text-align:right}
+  tbody tr{transition:background .12s ease}
+  tbody tr:hover{background:var(--card2)}
+  tr.green .rag{color:var(--green)} tr.amber .rag{color:var(--amber)} tr.red .rag{color:var(--red)}
+  tr.red td:first-child{font-weight:600}
+
+  /* panels */
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   @media(max-width:640px){.grid2{grid-template-columns:1fr}}
-  .flag{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);}
-  .flag .lab{font-weight:600}
-  .pill{font:600 11px var(--mono);padding:2px 8px;border-radius:20px;background:var(--card2);color:var(--muted);}
-  .pill.hot{background:color-mix(in srgb,var(--red) 20%,transparent);color:var(--red);}
-  .muted{color:var(--muted)} .tiny{font-size:12px}
-  .foot{margin-top:40px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;}
-  code{font-family:var(--mono);background:var(--card2);padding:1px 6px;border-radius:6px;}
+  .panel{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:6px 18px;}
+  .phead{font-weight:650;font-size:13px;padding:12px 0 6px;}
+  .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+       padding:9px 0;border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:none}
+  .bar{height:7px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:6px;}
+  .bar>i{display:block;height:100%;background:var(--accent);border-radius:5px;}
+  .bar.green>i{background:var(--green)} .bar.amber>i{background:var(--amber)} .bar.red>i{background:var(--red)}
+  .pill{font:600 11px var(--mono);padding:2px 8px;border-radius:20px;background:var(--card2);color:var(--muted);
+        border:1px solid var(--line);}
+  .pill.hot{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red);border-color:transparent;}
+  .empty{color:var(--muted);font-size:14px;padding:14px 0;}
+  .foot{margin-top:44px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;line-height:1.7;}
+  code{font-family:var(--mono);background:var(--card2);padding:1px 6px;border-radius:6px;font-size:.9em;}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<main class="wrap">
 
-  <h1>{{ period_label }}</h1>
-  <div class="sub">{{ date_range }} &middot; financial month (23rd–22nd) &middot; {{ txn_count }} transactions</div>
-  {% if banner %}<div class="banner">{{ banner }}</div>{% endif %}
+  <header>
+    <h1>{{ period_label }}</h1>
+    <div class="sub">{{ date_range }} · financial month (23rd–22nd) · {{ txn_count }} transactions</div>
+    {% if banner %}<div class="banner">{{ banner }}</div>{% endif %}
+    <p class="verdict">
+      <b>{{ 'Surplus' if summary.net>=0 else 'Deficit' }} of {{ summary.net|abs|bhd }} BHD</b>
+      on {{ summary.spend|bhd }} spend against {{ summary.income|bhd }} income{% if summary.savings_rate is not none %},
+      a {{ summary.savings_rate }}% savings rate{% endif %}.{% if top_leak %}
+      Biggest overspend: <b>{{ top_leak.category }}</b> at {{ top_leak.actual|bhd }} vs {{ top_leak.planned|bhd }} plan.{% endif %}
+    </p>
+  </header>
 
-  <!-- 1. HEADLINE -->
-  <div class="cards" style="margin-top:16px">
-    <div class="card"><div class="k">Income</div><div class="v pos">{{ summary.income|bhd }}</div></div>
-    <div class="card"><div class="k">Spend</div><div class="v">{{ summary.spend|bhd }}</div></div>
-    <div class="card"><div class="k">Net</div>
+  <!-- Headline KPIs -->
+  <div class="summary">
+    <div class="cell"><div class="k">Income</div><div class="v pos">{{ summary.income|bhd }}</div></div>
+    <div class="cell"><div class="k">Spend</div><div class="v">{{ summary.spend|bhd }}</div></div>
+    <div class="cell key"><div class="k">Net</div>
       <div class="v {{ 'pos' if summary.net>=0 else 'neg' }}">{{ summary.net|bhd }}</div></div>
-    <div class="card"><div class="k">Savings rate</div>
-      <div class="v {{ 'pos' if (summary.savings_rate or 0)>=0 else 'neg' }}">
-        {{ summary.savings_rate if summary.savings_rate is not none else '—' }}%</div></div>
-    <div class="card hero"><div class="k">Investable surplus →</div>
-      <div class="v small">{{ surplus.suggested_transfer|bhd }}</div>
-      <div class="tiny muted">net − {{ surplus.school_set_aside|bhd }} school set-aside</div></div>
+    <div class="cell"><div class="k">Savings rate</div>
+      <div class="v {{ 'pos' if (summary.savings_rate or 0)>=0 else 'neg' }}">{{ summary.savings_rate if summary.savings_rate is not none else '—' }}%</div></div>
+  </div>
+
+  {% if net_trend and net_trend|length > 1 %}
+  {% set peak = (net_trend|map(attribute='net')|map('abs')|max) or 1 %}
+  <div class="trend">
+    <div class="k">Net, last {{ net_trend|length }} months</div>
+    <div class="spark">
+      {% for t in net_trend %}
+      <div class="col" title="{{ t.label }}: {{ t.net|bhd }}">
+        <div class="colbar {{ 'up' if t.net>=0 else 'down' }}" style="height:{{ (2 + (t.net|abs) / peak * 36)|round(1) }}px"></div>
+        <div class="collab">{{ t.label.split(' ')[0] }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Suggested action -->
+  <div class="action">
+    <span class="lbl">Suggested transfer this month</span>
+    <span class="amt">{{ surplus.suggested_transfer|bhd }} BHD</span>
+    <span class="why">net {{ surplus.net|bhd }} minus {{ surplus.school_set_aside|bhd }} school set-aside</span>
   </div>
 
   {% if pacing %}
-  <div class="card2" style="margin-top:12px;padding:12px 18px">
-    <b>Pace</b> — day {{ pacing.day }}/{{ pacing.days }}: spent {{ pacing.spend_to_date|bhd }} so far,
+  <div class="pace">
+    <b>Pace:</b> day {{ pacing.day }}/{{ pacing.days }}, spent {{ pacing.spend_to_date|bhd }} so far,
     {% if pacing.closed %}final{% else %}on track for ~<b>{{ pacing.projected_spend|bhd }}</b>{% endif %}
     vs plan {{ pacing.plan_expense|bhd }}{% if pacing.last_spend is not none %} · last period {{ pacing.last_spend|bhd }}{% endif %}
     {% if pacing.on_track is not none %}<span class="pill {{ '' if pacing.on_track else 'hot' }}">{{ 'on track' if pacing.on_track else 'over pace' }}</span>{% endif %}
   </div>
   {% endif %}
 
-  <!-- 2. PLAN vs ACTUAL -->
-  <h2>Plan vs Actual</h2>
+  <h2>Plan vs actual</h2>
+  <div class="tablewrap">
   <table>
-    <tr><th>Category</th><th class="num">Plan</th><th class="num">Actual</th>
-        <th class="num">Variance</th><th>Status</th></tr>
+    <caption>Planned versus actual amounts by category for {{ period_label }}</caption>
+    <thead><tr><th scope="col">Category</th><th scope="col" class="num">Plan</th>
+      <th scope="col" class="num">Actual</th><th scope="col" class="num">Variance</th><th scope="col">Status</th></tr></thead>
+    <tbody>
     {% for r in income_rows %}
     <tr class="{{ r.rag|ragclass }}">
-      <td>{{ r.category }} <span class="tiny muted">(income)</span></td>
+      <td>{{ r.category }} <span class="tiny muted">income</span></td>
       <td class="num">{{ r.planned|bhd }}</td><td class="num">{{ r.actual|bhd }}</td>
       <td class="num {{ 'pos' if r.variance>=0 else 'neg' }}">{{ r.variance|bhd }}</td>
       <td class="rag">{{ r.rag }}</td></tr>
     {% endfor %}
     {% for r in expense_rows %}
     <tr class="{{ r.rag|ragclass }}">
-      <td>{{ r.category }}{% if r.section=='UNPLANNED' %} <span class="tiny muted">(unplanned)</span>{% endif %}</td>
+      <td>{{ r.category }}{% if r.section=='UNPLANNED' %} <span class="tiny muted">unplanned</span>{% endif %}</td>
       <td class="num">{{ r.planned|bhd }}</td><td class="num">{{ r.actual|bhd }}</td>
       <td class="num {{ 'neg' if r.variance>0 else 'pos' }}">{{ r.variance|bhd }}</td>
       <td class="rag">{{ r.rag }}</td></tr>
     {% endfor %}
+    </tbody>
   </table>
+  </div>
 
-  <!-- 3. CATEGORY BREAKDOWN -->
-  <h2>Category breakdown</h2>
-  <div class="card2">
+  <h2>Where it went</h2>
+  <div class="panel">
     {% for b in breakdown %}
     <div style="padding:9px 0;border-bottom:1px solid var(--line)">
-      <div style="display:flex;justify-content:space-between">
+      <div style="display:flex;justify-content:space-between;gap:10px">
         <span>{{ b.category or 'Uncategorised' }} <span class="tiny muted">({{ b.n }})</span></span>
-        <span class="num">{{ b.spend|bhd }} &nbsp;<span class="muted tiny">{{ b.pct }}%</span></span>
+        <span class="num">{{ b.spend|bhd }} <span class="muted tiny">{{ b.pct }}%</span></span>
       </div>
       <div class="bar"><i style="width:{{ b.pct }}%"></i></div>
     </div>
+    {% else %}
+    <div class="empty">No spending recorded this period.</div>
     {% endfor %}
   </div>
 
-  <!-- 4. STANDING FLAGS -->
-  <h2>Standing flags</h2>
+  <h2>Standing flags &amp; subscriptions</h2>
   <div class="grid2">
-    <div class="card2">
+    <div class="panel">
+      <div class="phead">Watch list</div>
       {% for f in flags %}
-      <div class="flag">
-        <span class="lab">{{ f.category }}</span>
+      <div class="row">
+        <span style="font-weight:600">{{ f.category }}</span>
         <span class="num">{{ f.actual|bhd }}
-          {% if f.vs_avg_pct is not none %}
-            <span class="pill {{ 'hot' if f.vs_avg_pct>25 else '' }}">
-              {{ '+' if f.vs_avg_pct>=0 else '' }}{{ f.vs_avg_pct }}% vs 3-mo</span>
-          {% endif %}
+          {% if f.vs_avg_pct is not none %}<span class="pill {{ 'hot' if f.vs_avg_pct>25 else '' }}">{{ '+' if f.vs_avg_pct>=0 else '' }}{{ f.vs_avg_pct }}% vs 3-mo</span>{% endif %}
         </span>
       </div>
-      <div class="tiny muted" style="padding:0 0 6px">
-        3-mo avg {{ f.avg_3mo|bhd }}{% if f.planned %} &middot; plan {{ f.planned|bhd }}{% endif %}</div>
+      <div class="tiny muted" style="padding:0 0 8px">3-mo avg {{ f.avg_3mo|bhd }}{% if f.planned %} · plan {{ f.planned|bhd }}{% endif %}</div>
       {% endfor %}
     </div>
-    <div class="card2">
-      <div class="tiny muted" style="padding:10px 0 4px">SUBSCRIPTIONS ({{ sub_changes|length }}) — ↑ hikes flagged</div>
+    <div class="panel">
+      <div class="phead">Subscriptions ({{ sub_changes|length }}) <span class="tiny muted">hikes flagged</span></div>
       {% for s in sub_changes %}
-      <div class="flag" style="padding:6px 0">
+      <div class="row" style="padding:7px 0">
         <span class="tiny">{{ s.merchant[:24] }}
           {% if s.status=='increased' %}<span class="pill hot">↑{{ s.delta_pct }}%</span>
           {% elif s.status=='new' %}<span class="pill">new</span>
           {% elif s.status=='gone' %}<span class="pill">gone</span>{% endif %}</span>
         <span class="num tiny">{{ s.amount|bhd }}</span></div>
+      {% else %}
+      <div class="empty">No subscription charges this period.</div>
       {% endfor %}
     </div>
   </div>
 
-  <!-- 5. SINKING FUNDS -->
   <h2>Sinking &amp; savings</h2>
   <div class="grid2">
-    <div class="card">
-      <div class="k">{{ school.label }} — next due {{ school.next_due or '—' }}</div>
-      <div class="v small">{{ school.target|bhd }}</div>
-      <div class="tiny muted">
-        set aside <b>{{ school.suggested_monthly|bhd }}</b>/mo for {{ school.months_to_due }} month(s)
-        &middot; paid this year {{ school.paid_this_year|bhd }}</div>
+    <div class="panel" style="padding:16px 18px">
+      <div class="k tiny muted" style="text-transform:uppercase;letter-spacing:.05em">{{ school.label }} · next due {{ school.next_due or '—' }}</div>
+      <div class="num" style="font-size:22px;margin:8px 0">{{ school.target|bhd }}</div>
+      <div class="tiny muted">set aside <b>{{ school.suggested_monthly|bhd }}</b>/mo for {{ school.months_to_due }} month(s) · paid this year {{ school.paid_this_year|bhd }}</div>
     </div>
-    <div class="card">
-      <div class="k">{{ emergency.label }} — target {{ emergency.target|bhd }}</div>
-      <div class="v small {{ 'pos' if emergency.pct and emergency.pct>=100 else '' }}">{{ emergency.current|bhd }}</div>
-      <div class="bar {{ 'green' if emergency.pct and emergency.pct>=100 else 'amber' }}">
-        <i style="width:{{ [emergency.pct or 0,100]|min }}%"></i></div>
-      <div class="tiny muted" style="margin-top:6px">
-        {{ emergency.pct }}% of target &middot; shortfall {{ emergency.shortfall|bhd }}
-        {% if emergency.balances %}<br>Khaleeji {{ emergency.balances.get('khaleeji')|bhd }},
-        ila {{ emergency.balances.get('ila_account')|bhd }}{% endif %}</div>
+    <div class="panel" style="padding:16px 18px">
+      <div class="k tiny muted" style="text-transform:uppercase;letter-spacing:.05em">{{ emergency.label }} · target {{ emergency.target|bhd }}</div>
+      <div class="num {{ 'pos' if emergency.pct and emergency.pct>=100 else '' }}" style="font-size:22px;margin:8px 0">{{ emergency.current|bhd }}</div>
+      <div class="bar {{ 'green' if emergency.pct and emergency.pct>=100 else 'amber' }}"><i style="width:{{ [emergency.pct or 0,100]|min }}%"></i></div>
+      <div class="tiny muted" style="margin-top:7px">{{ emergency.pct }}% of target · shortfall {{ emergency.shortfall|bhd }}{% if emergency.balances %}<br>Khaleeji {{ emergency.balances.get('khaleeji')|bhd }}, ila {{ emergency.balances.get('ila_account')|bhd }}{% endif %}</div>
     </div>
   </div>
 
-  <!-- CASH-FLOW FORECAST -->
   {% if forecast.rows %}
   <h2>Cash-flow forecast</h2>
-  <div class="sub">Projected forward from {{ forecast.anchor_label }} balance
-    {{ forecast.anchor_balance|bhd }}, if you follow the plan.
-    {% if forecast.low %}Low point: <b>{{ forecast.low.label }}</b> at {{ forecast.low.projected_balance|bhd }}.{% endif %}</div>
+  <div class="sub" style="margin-bottom:12px">Projected forward from {{ forecast.anchor_label }} balance {{ forecast.anchor_balance|bhd }}, if you follow the plan.{% if forecast.low %} Low point: <b>{{ forecast.low.label }}</b> at {{ forecast.low.projected_balance|bhd }}.{% endif %}</div>
+  <div class="tablewrap">
   <table>
-    <tr><th>Period</th><th class="num">Planned net</th><th class="num">Projected balance</th><th></th></tr>
+    <caption>Projected end-of-period balances following the plan</caption>
+    <thead><tr><th scope="col">Period</th><th scope="col" class="num">Planned net</th>
+      <th scope="col" class="num">Projected balance</th><th scope="col"></th></tr></thead>
+    <tbody>
     {% for r in forecast.rows %}
     <tr class="{% if forecast.low and r.period_id==forecast.low.period_id %}red{% endif %}">
       <td>{{ r.label }}{% if r.school_due %} 🎓{% endif %}</td>
@@ -186,22 +250,32 @@
       <td class="num">{{ r.projected_balance|bhd }}</td>
       <td class="rag">{% if forecast.low and r.period_id==forecast.low.period_id %}⬇ low{% endif %}</td></tr>
     {% endfor %}
+    </tbody>
   </table>
+  </div>
   {% endif %}
 
-  <!-- 6. UNCATEGORISED REVIEW -->
-  <h2>Needs review — {{ uncat_count }} uncategorised ({{ uncat_pct }}%)</h2>
-  <div class="sub">Resolve with <code>finance review</code>; naming an IBAN once teaches it for every month.</div>
+  <h2>Needs review: {{ uncat_count }} uncategorised ({{ uncat_pct }}%)</h2>
+  <div class="sub" style="margin-bottom:12px">Resolve with <code>finance review</code>. Naming an IBAN once teaches it for every month.</div>
+  {% if uncategorised %}
+  <div class="tablewrap">
   <table>
-    <tr><th>Counterparty / merchant</th><th class="num">#</th><th class="num">Amount</th></tr>
+    <caption>Largest uncategorised counterparties and merchants</caption>
+    <thead><tr><th scope="col">Counterparty / merchant</th><th scope="col" class="num">Count</th><th scope="col" class="num">Amount</th></tr></thead>
+    <tbody>
     {% for u in uncategorised %}
     <tr><td>{{ u.who }} {% if u.is_iban %}<span class="tiny muted">IBAN</span>{% endif %}</td>
         <td class="num">{{ u.n }}</td><td class="num">{{ u.amt|bhd }}</td></tr>
     {% endfor %}
+    </tbody>
   </table>
+  </div>
+  {% else %}
+  <div class="empty">Nothing to review. Everything is categorised. 🎉</div>
+  {% endif %}
 
-  <div class="foot">Generated {{ generated_at }} · <code>finance run</code> · SQLite is the source of truth.
-    BHD, financial month 23rd–22nd. 🟢 within plan · 🟡 ≤15% over · 🔴 &gt;15% over.</div>
-</div>
+  <div class="foot">Generated {{ generated_at }} · <code>finance run</code> · SQLite is the source of truth.<br>
+    BHD, financial month 23rd–22nd. Status: 🟢 within plan · 🟡 up to 15% over · 🔴 more than 15% over.</div>
+</main>
 </body>
 </html>

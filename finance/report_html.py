@@ -56,6 +56,13 @@ def build_context(conn: sqlite3.Connection, cfg: Config, period_id: str,
     summary = var.period_summary(conn, period_id)
     start, end = period_bounds(period_id)
     pva = var.plan_vs_actual(conn, period_id, cfg)
+    _over = [r for r in pva if not r["is_income"] and r["variance"] > 1 and r["planned"] > 0]
+    top_leak = max(_over, key=lambda r: r["variance"]) if _over else None
+    _tids = [r[0] for r in conn.execute(
+        "SELECT DISTINCT period_id FROM transactions WHERE period_id<=? "
+        "ORDER BY period_id DESC LIMIT 6", (period_id,)).fetchall()]
+    net_trend = [{"label": period_label(p), "net": var.period_summary(conn, p)["net"]}
+                 for p in reversed(_tids)]
     emergency = sink.emergency_fund(conn, cfg)
     school = sink.school_fund(conn, cfg, period_id)
     surplus = sink.investable_surplus(conn, cfg, period_id, summary["net"])
@@ -71,6 +78,8 @@ def build_context(conn: sqlite3.Connection, cfg: Config, period_id: str,
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "banner": banner,
         "summary": summary,
+        "top_leak": top_leak,
+        "net_trend": net_trend,
         "plan_vs_actual": pva,
         "income_rows": [r for r in pva if r["is_income"]],
         "expense_rows": [r for r in pva if not r["is_income"]],
