@@ -16,6 +16,7 @@ from . import variance as var
 from . import sinking as sink
 from . import forecast as fc
 from .periods import period_id_of, period_label, period_bounds, parse_period
+from .theme import TOKENS_CSS
 
 _TEMPLATES = Path(__file__).resolve().parent / "templates"
 MIN_MEANINGFUL = 30   # a period with fewer txns is treated as an incomplete tail
@@ -72,6 +73,7 @@ def build_context(conn: sqlite3.Connection, cfg: Config, period_id: str,
     n_txn = conn.execute(
         "SELECT COUNT(*) FROM transactions WHERE period_id=?", (period_id,)).fetchone()[0]
     return {
+        "tokens_css": TOKENS_CSS,
         "period_id": period_id,
         "period_label": period_label(period_id),
         "date_range": f"{start.isoformat()} to {end.isoformat()}",
